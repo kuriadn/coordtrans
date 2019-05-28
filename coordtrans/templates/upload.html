@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% block title %}{{ block.super }} {{ data.0.heading }} {% endblock %}
+
+{% block styles %}
+  {{block.super}}
+  <link href="{% static 'site/css/nav.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link=formset.0 %}
+{% endblock %}
+
+{% block navbar-right %}
+  {% if not user.is_authenticated %}
+<a class="btn btn-default" href="{% url 'accounts:login' %}" role="button">Log in</a>
+  {% else %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+
+{% block container %}
+{% include "_sidenav.html" with active_link="file" %}
+<div class="main">
+<div class="container profile-head">
+    <div class="row">
+      <div class="col-sm-12 text-center">
+        <h1>TRANSFORM COORDINATES FROM FILE</h1>
+      </div>
+    </div>
+</div>
+
+<div class="container profile-body">
+  <div class="row">
+    <div class="col-sm-12">
+          <form enctype="multipart/form-data" method="post">
+          {% csrf_token %}
+            <div id="form_input">
+                <table class='no_error table'>
+                  {% if form.non_field_errors|length > 0 %}
+                  <tr class="bg-warning"><td colspan={% widthratio form.fields|length 1 2 %}>{{ form.non_field_errors }}</td></tr>
+                  {% endif %}
+                  <tr>
+                    <td colspan=4 class="bg-primary text-center"><h3>Specify transformation type and Reference sheet</h3></td>
+                  </tr>
+                  <tr>
+                    {% for field in form %}
+                    {% if field.label == 'Source' %}
+                    <td colspan=2>{{field.label}}:</td><td>{% render_field field class="form-control" %}</td>
+                    </tr><tr>
+                    {% else %}
+                    <td>{{field.label}}:</td><td>{% render_field field class="form-control" %}</td>
+                    {% endif %}
+                    {% endfor %}
+                  </tr>
+                 </table>
+                </div>
+        	<div class="col-sm-4"></div>
+          <div class="col-sm-4"><button type="submit" class="save btn btn-block btn-primary"><span class="glyphicon glyphicon-filter"></span>Get File</button></div>
+          <div class="col-sm-4"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+{%block footer %}
+  {% include "_footer.html" %}
+{% endblock %}
+</div>
+{% endblock %}

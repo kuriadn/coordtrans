@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% block title %}{{ block.super }} {{ data.0.heading }} {% endblock %}
+
+{% block styles %}
+  {{block.super}}
+  <link href="{% static 'site/css/nav.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link=formset.0 %}
+{% endblock %}
+
+{% block navbar-right %}
+  {% if not user.is_authenticated %}
+<a class="btn btn-default" href="{% url 'accounts:login' %}" role="button">Log in</a>
+  {% else %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+
+{% block container %}
+{% include "_sidenav.html" with active_link=data.0.new|lower %}
+<div class="main">
+<div class="container profile-head">
+    <div class="row">
+      <div class="col-sm-12 text-center">
+        <h1>POINTS TRANSFORMED</h1>
+      </div>
+    </div>
+</div>
+<div class="container profile-body">
+    <div class="row">
+      <div class="col-sm-12">
+    <table class="table">
+     <tr>
+      <th colspan=4 class="bg-primary text-center">Transformation request</th>
+      </tr>
+      <tr>
+        <td>Transformation to: <strong>{{data.0.1}}</strong></td>
+        <td>Sheet Number: <strong>{{data.0.0}}</strong></td>
+        <td>Points input: <strong>{{data.0.2}}</strong></td>
+        <td>Valid points: <strong>{{data.0.3}}</strong></td>
+      </tr>
+    </table>
+      <table class="table">
+        <tr>
+          <th colspan=2 class="bg-primary text-center">Input Point</th>
+          <th colspan=2 class="bg-primary text-center">Transformed Point</th>
+        </tr>
+        {% if data.1|length != data.0.2 %}
+        <tr><td colspan=4 class="text-center"><strong><h4>{{data.1}}</h4></strong></td></tr>
+        {% else %}
+          {% for dt in data.1 %}
+          <tr>
+          <td>{{dt.0.0|floatformat:2}}</td>
+          <td>{{dt.0.1|floatformat:2}}</td>
+          {% if dt.1 == 'Point outside sheet - Not transformed' %}
+            <td colspan=2 ><strong>{{dt.1}}</strong></td>
+          {% else %}
+            <td>{{dt.1.0|floatformat:2}}</td><td>{{dt.1.1|floatformat:2}}</td>
+          {% endif %}
+          </tr>
+          {% endfor %}
+        {% endif %}
+      </table>
+    </div>
+    </div>
+</div>
+
+{%block footer %}
+  {% include "_footer.html" %}
+{% endblock %}
+</div>
+{% endblock %}

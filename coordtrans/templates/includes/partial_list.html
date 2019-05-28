@@ -1,0 +1,25 @@
+{% for obj in data.1 %}
+  <tr class="{% cycle 'odd' 'even' %}">
+    {% for key, val in obj.0.items %}
+      <td> {{ val }} </td>
+    {% endfor %}
+
+    <td style="width: 190px">
+      <button type="button"
+              class="btn btn-warning btn-sm js-update"
+              data-url="{{ obj.1.update }}">
+        <span class="glyphicon glyphicon-pencil"></span> Edit
+      </button>
+      <button type="button"
+              class="btn btn-danger btn-sm js-delete"
+              data-url="{{ obj.1.delete }}">
+        <span class="glyphicon glyphicon-trash"></span> Delete
+      </button>
+    </td>
+
+  </tr>
+{% empty %}
+  <tr>
+    <td colspan="8" class="text-center bg-warning">No {{ data.0.new|title }}</td>
+  </tr>
+{% endfor %}

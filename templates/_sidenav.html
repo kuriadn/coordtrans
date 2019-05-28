@@ -1,0 +1,35 @@
+<nav class="navbar navbar-inverse sidebar" role="navigation">
+    <div class="container-fluid">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-sidebar-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="{% url 'home' %}">Ultigeo Center</a>
+		</div>
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="dropdown {%if active_link == "control point" or active_link == "sheet" or active_link == "transformation request" %} active{%endif%}">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown">Main Data<span class="caret"></span><span style="font-size:14px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-globe"></span></a>
+					<ul class="dropdown-menu forAnimate" role="menu">
+	                    <li {% if active_link == "control point" %}class="active"{% endif %}><a href="{% url 'coords:controlpoint_list' %}">Control Points</a></li>
+	                    <li {% if active_link == "sheet" %}class="active"{% endif %}><a href="{% url 'coords:sheetreference_list' %}">Sheets</a></li>
+	                    <li {% if active_link == "transformation request" %}class="active"{% endif %}><a href="{% url 'coords:transrequest_list' %}">Transformations</a></li>
+					</ul>
+				</li>
+				<li class="dropdown {%if active_link == "points" or active_link == "file" %}active{%endif%}">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown">Transforms<span class="caret"></span><span style="font-size:14px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-asterisk"></span></a>
+					<ul class="dropdown-menu forAnimate" role="menu">
+						<li  {% if active_link == "points" %}class="active"{% endif %}><a href="{% url 'coords:enterpoints' %}">Enter Points</a></li>
+						<li  {% if active_link == "file" %}class="active"{% endif %}><a href="{% url 'coords:getfile' %}">Get File</a></li>
+					</ul>
+				</li>
+
+			</ul>
+		</div>
+	</div>
+</nav>

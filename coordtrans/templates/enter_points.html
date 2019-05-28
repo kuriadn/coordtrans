@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<h3>Enter Points to be transformed</h3>
+{{ formset.management_form }}
+<div id="form_set">
+    {% for form in formset.forms %}
+        <table class='no_error'>
+            {{ form.as_table }}
+        </table>
+    {% endfor %}
+</div>
+<input type="button" value="Add More" id="add_more">
+<div id="empty_form" class="coord_form"style="display:none">
+    <table class='no_error'>
+        {{ formset.empty_form.as_table }}
+    </table>
+</div>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="{% static 'site/js/jquery.formset.js' %}"></script>
+<script>
+    $('.coord_form').formset({
+        addText: 'add link',
+        deleteText: 'remove'
+    });
+</script></script>
+</html>

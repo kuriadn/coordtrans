@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% block title %}{{ block.super }} {{ data.0.heading }} {% endblock %}
+{% block styles %}
+  {{block.super}}
+  <link href="{% static 'site/css/nav.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link=formset.0 %}
+{% endblock %}
+
+{% block navbar-right %}
+  {% if not user.is_authenticated %}
+<a class="btn btn-default" href="{% url 'accounts:login' %}" role="button">Log in</a>
+  {% else %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+
+{% block container %}
+{% include "_sidenav.html" with active_link="points" %}
+<div class="main">
+<div class="container profile-head">
+    <div class="row">
+      <div class="col-sm-12 text-center">
+        <h1>DIRECTLY ENTER COORDINATES TO TRANSFORM</h1>
+      </div>
+    </div>
+</div>
+
+<div class="container profile-body">
+  <div class="row">
+    <div class="col-sm-12">
+        {{ formset.1.non_form_errors }}
+        <form role="form" method="post" id="myForm">
+        {% csrf_token %}
+            <div id="form_input">
+                <table class='no_error table'>
+                  {% if formset.0.non_field_errors|length > 0 %}
+                  <tr class="bg-warning"><td colspan={% widthratio form.fields|length 1 2 %}>{{ formset.0.non_field_errors }}</td></tr>
+                  {% endif %}
+                  <tr>
+                    <td colspan=4 class="bg-primary text-center"><h3>Specify transformation type and Reference sheet</h3></td>
+                  </tr>
+                  <tr>
+                    {% for field in formset.0 %}
+                    <td>{{field.label}}:</td><td>{% render_field field class="form-control" %}</td>
+                    {% endfor %}
+                  </tr>
+                 </table>
+                </div>
+
+                {% csrf_token %}
+                {{ formset.1.management_form }}
+                <div id="form_set">
+                    <table class='no_error table'>
+                      <tr>
+                        <td colspan=4 class='bg-info text-center'><h3>Give coordinates of points to be transformed</h3></td>
+                      </tr>
+                      {% for form in formset.1 %}
+                      {% if form.non_field_errors|length > 0 %}
+                      <tr class="bg-warning"><td colspan={% widthratio form.fields|length 1 2 %}>{{ form.non_field_errors }}</td></tr>
+                      {% endif %}
+                      <tr>
+                        {% for field in form %}
+                        <td>{{field.label}}:</td><td>{% render_field field class="form-control" %}</td>
+                        {% endfor %}
+                      </tr>
+                      {% endfor %}
+                    </table>
+                </div>
+                <div class="col-sm-3"></div>
+                <div class="col-sm-3">
+                <button class="btn btn-block btn-info" type="button" id="add_point">Add another point</button>
+                </div>
+                <div class="col-sm-3">
+                <button class="btn btn-block btn-primary" type="submit">Run the transformation request</button>
+                </div>
+               <div class="col-sm-3"></div>
+                 <div id="empty_form" style="display:none">
+                <table class='no_error table'>
+                  <tr>
+                    {% for field in formset.1.empty_form %}
+                    <td>{{field.label}}:</td><td>{% render_field field class="form-control" %}</td>
+                    {% endfor %}
+                  </tr>
+                </table>
+              </div>
+           </form>
+       </div>
+   </div>
+</div>
+
+{%block footer %}
+  {% include "_footer.html" %}
+{% endblock %}
+</div>
+    {% endblock %}
+    {% block scripts %}
+    {{ block.super }}
+    <script>
+    $('#add_point').click(function() {
+        var form_idx = $('#id_form-TOTAL_FORMS').val();
+        if (form_idx < 13) {
+            $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
+            $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+        }
+        else {
+            alert ('The maximum number of direct entries has been reached. If you need more conversions, please prepare them as a file and upload the file instead.');
+        }
+    });
+    $('#remove_point').click(function() {
+        var form_idx = $('#id_form-TOTAL_FORMS').val();
+        var f = document.getElementById('id_form-' + form_idx + '-N');
+        f.parentNode.removeChild(f);
+        var f = document.getElementById('id_form-' + form_idx + '-E');
+        f.parentNode.removeChild(f);
+        $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) - 1);
+       });
+    </script>
+    {% endblock %}
