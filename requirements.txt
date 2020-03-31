@@ -6,7 +6,7 @@ Babel==2.3.4
 backlash==0.1.1
 beautifulsoup4==4.5.3
 billiard==3.5.0.2
-bleach==1.5.0
+bleach==3.1.4
 celery==4.0.2
 cffi==1.9.1
 click==5.1
