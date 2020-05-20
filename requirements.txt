@@ -292,7 +292,7 @@ Fiona==1.8.6
 future==0.17.1
 GDAL==2.4.0
 html5lib==1.0.1
-httplib2==0.12.1
+httplib2==0.18.0
 idna==2.8
 imread==0.7.0
 jdcal==1.4
