@@ -185,7 +185,7 @@ virtualenv-clone==0.2.6
 virtualenvwrapper==4.7.2
 virtualenvwrapper-win==1.2.1
 vishap==0.1.5
-wagtail==1.8
+wagtail==2.7.4
 waitress==1.0.1
 webencodings==0.5
 WebOb==1.7.1
