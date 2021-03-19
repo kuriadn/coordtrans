@@ -282,7 +282,7 @@ django-viewflow==1.5.1
 django-waffle==0.16.0
 django-watermark==0.1.8
 django-widget-tweaks==1.4.3
-djangorestframework==3.9.2
+djangorestframework==3.11.2
 docutils==0.14
 draftjs-exporter==2.1.5
 easy-thumbnails==2.6
