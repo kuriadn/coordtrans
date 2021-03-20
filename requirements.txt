@@ -296,7 +296,7 @@ httplib2==0.12.1
 idna==2.8
 imread==0.7.0
 jdcal==1.4
-Jinja2==2.10.1
+Jinja2==2.11.3
 jmespath==0.9.4
 joblib==0.13.2
 keyring==19.0.1
