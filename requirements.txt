@@ -357,7 +357,7 @@ rasterio==1.0.22
 rcssmin==1.0.6
 redis==3.2.1
 regex==2019.4.14
-reportlab==3.5.21
+reportlab==3.5.55
 requests==2.21.0
 requests-oauthlib==1.2.0
 rjsmin==1.1.0
