@@ -298,7 +298,7 @@ imread==0.7.0
 jdcal==1.4
 Jinja2==2.10.1
 jmespath==0.9.4
-joblib==0.13.2
+joblib==1.2.0
 keyring==19.0.1
 keyrings.alt==3.1.1
 kiwisolver==1.0.1
