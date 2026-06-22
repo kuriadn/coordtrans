@@ -3,7 +3,7 @@ from pyproj import Proj, transform
 import numpy as nm
 from numpy.linalg import inv
 import sys
-from utilities import genCoeffMatrix, compute, computeCass, degMinSec, decDeg, getSgn
+from georef.utilities import genCoeffMatrix, compute, computeCass, degMinSec, decDeg, getSgn
 
 def getLng0(geog,cass):
   lng0 = floor(geog)

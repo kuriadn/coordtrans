@@ -3,8 +3,8 @@ from pyproj import Proj, transform
 import numpy as nm
 import sys, getopt
 from numpy.linalg import inv
-from anglemanip import AngleManip
-from casstables import CassTable
+from georef.anglemanip import AngleManip
+from georef.casstables import CassTable
 
 def getProjStrCass(phi0, lam0):
   projStr ='+proj=cass +lat_0={0} +lon_0={1} +a=20926348 +b=20855233 +units=m +no_defs'.format(phi0, lam0)

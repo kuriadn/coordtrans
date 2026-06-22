@@ -9,7 +9,7 @@
 
 import numpy as nm
 import sys, getopt, os
-from numpy.linalg import inv
+from georef.utilities import genCoeffMatrix, compute
 from coordtrans.models import *
 from coordtrans.forms import *
 from django.forms import formset_factory
@@ -19,50 +19,6 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 from django.shortcuts import render, get_object_or_404
-
-def genCoeffMatrix(x):
-# This function prepares the Matrix of Coefficients given an input vector
-  n = len(x)
-  #print ('n = {0}'.format(n))
-  j = 0
-  mat = []
-  for i in range(0,int(n/2)):
-  	tmp = []
-  	tmp.append(x[j * 2 ])
-  	tmp.append(-x[j * 2 +1])
-  	tmp.append(1)
-  	tmp.append(0)
-  	mat.append(tmp)
-  	tmp = []
-  	tmp.append(x[j * 2 + 1])
-  	tmp.append(x[j * 2])
-  	tmp.append(0)
-  	tmp.append(1)
-  	mat.append(tmp)
-  	j += 1
-  return nm.array(mat)
-
-def compute(x,l):
-# This function computes the transformation parameters
-# Matrix of coefficients
-  A = genCoeffMatrix(x)
-
-  L=l
-  L=nm.transpose(L)
- 
-# Prepare system of equations
-  AT=nm.transpose(A)
-  ATA=nm.dot(AT,A)
-  ATL=nm.dot(AT,L)
-  ATAInv = inv(ATA)
-
-# The solution
-  x=nm.dot(ATAInv,ATL)
-  L1 = nm.dot(A,x)
-
-# The computation errors
-  er=L1-L
-  return x, er, ATAInv
 
 def readData(src):
 # This function reads the input file and prepares the input vector required for the transformation computations

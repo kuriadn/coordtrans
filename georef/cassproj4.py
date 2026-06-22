@@ -5,7 +5,7 @@
 # +units=m +no_defs
 from math import *
 from pyproj import Proj, transform
-from anglemanip import AngleManip
+from georef.anglemanip import AngleManip
 
 # a = 6378293.645 * 3.28084
 # b = 6356617.988

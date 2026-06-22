@@ -17,7 +17,7 @@ def genCoeffMatrix(x):
   n = len(x)
   j = 0
   mat = []
-  for i in range(0,n/2):
+  for i in range(0, n // 2):
     tmp = []
     tmp.append(x[j * 2 ] * pi / 180.)
     tmp.append(x[j * 2 +1]  * pi / 180.)
@@ -41,7 +41,7 @@ def formatPrint(orig, trans):
 # This function prepares the results for output by matching the original and transformed coordinates
   n = len(orig)
   out = []
-  for i in range(0,n/2):
+  for i in range(0, n // 2):
   	tmp = []
   	tmp.append(orig[2 * i])
   	tmp.append(orig[2 * i + 1])

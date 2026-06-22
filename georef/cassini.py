@@ -3,7 +3,7 @@
 
 from math import *
 from pyproj import Proj, transform
-from anglemanip import AngleManip
+from georef.anglemanip import AngleManip
 
 def computeGeog(a, e, phi0, x, y):
   phip = computePhiP(a, e, phi0, y)

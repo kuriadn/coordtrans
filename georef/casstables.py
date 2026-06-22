@@ -1,5 +1,5 @@
 from math import *
-from anglemanip import AngleManip
+from georef.anglemanip import AngleManip
 
 class CassTable():
 

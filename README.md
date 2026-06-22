@@ -48,6 +48,16 @@ Survey tools are **public** (no login). Staff sign in at `/login/` or `/admin/` 
 
 Default CRS definitions: `MAP_CASSINI_PROJ4` and `MAP_UTM_EPSG` in `fayvadgeo/settings/base.py`.
 
+## georef library
+
+The [kuriadn/georef](https://github.com/kuriadn/georef) Cassini/UTM library is merged into this repo under `georef/`. The web coordinate transform uses `georef.utilities` for affine math; Django views and models live in `fayvadgeo/georef.py`.
+
+```bash
+python -m georef.georef -i control_points.csv
+```
+
+See `georef/README.md` for module reference.
+
 ## Input file format (point uploads)
 
 Plain text, one point per line: `x,y` (easting/northing or lon/lat per source CRS)

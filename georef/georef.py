@@ -10,13 +10,13 @@
 import numpy as nm
 import sys, getopt
 from numpy.linalg import inv
-from utilities import genCoeffMatrix, compute
+from georef.utilities import genCoeffMatrix, compute
 
 def formatPrint(orig, trans):
 # This function prepares the results for output by matching the original and transformed coordinates
   n = len(orig)
   out = []
-  for i in range(0, n/2):
+  for i in range(0, n // 2):
   	tmp = []
   	tmp.append(orig[2 * i])
   	tmp.append(orig[2 * i + 1])
