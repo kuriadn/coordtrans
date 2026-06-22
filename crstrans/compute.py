@@ -1,7 +1,9 @@
-"""CRS-to-CRS point transformation via pyproj."""
+"""CRS-to-CRS point transformation via pyproj and NLIMS log tables."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+
+from georef.cassini_tables import CassTable
 
 try:
     import pyproj
@@ -108,6 +110,53 @@ def transform_points(
         preset_label=preset_label_text,
         source_crs=source_str,
         target_crs=target_str,
+        source_geographic=source_geo,
+        target_geographic=target_geo,
+        rows=rows,
+        input_count=len(points),
+        success_count=len(rows),
+    )
+
+
+def transform_points_tables(
+    preset: str,
+    points: list[tuple[float, float]],
+    central_meridian: float,
+    preset_label_text: str = '',
+) -> CrsTransformResult:
+    if not points:
+        raise ValueError('No points to transform.')
+    table = CassTable()
+    rows: list[TransformRow] = []
+    for index, (x, y) in enumerate(points, start=1):
+        if preset == 'tables-cassini-wgs84':
+            out_x, out_y = table.compute_geog(float(x), float(y), float(central_meridian))
+            source_label = f'Cassini (tables, CM {central_meridian}°E)'
+            target_label = 'WGS84 geographic'
+            source_geo = False
+            target_geo = True
+        elif preset == 'tables-wgs84-cassini':
+            out_x, out_y = table.compute_cass(float(x), float(y), float(central_meridian))
+            source_label = 'WGS84 geographic'
+            target_label = f'Cassini (tables, CM {central_meridian}°E)'
+            source_geo = True
+            target_geo = False
+        else:
+            raise ValueError(f'Unknown table preset: {preset}')
+        rows.append(
+            TransformRow(
+                index=index,
+                in_x=float(x),
+                in_y=float(y),
+                out_x=float(out_x),
+                out_y=float(out_y),
+            )
+        )
+    return CrsTransformResult(
+        preset=preset,
+        preset_label=preset_label_text or preset,
+        source_crs=source_label,
+        target_crs=target_label,
         source_geographic=source_geo,
         target_geographic=target_geo,
         rows=rows,

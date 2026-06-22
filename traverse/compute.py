@@ -5,6 +5,8 @@ import math
 from dataclasses import dataclass, field
 from typing import Literal
 
+from fayvadgeo.survey_math import dms_to_decimal, format_bearing_dms
+
 
 AdjustmentMethod = Literal['compass', 'transit']
 TraverseType = Literal['closed', 'open']
@@ -65,21 +67,6 @@ def bearing_to_components(bearing_deg: float, distance: float) -> tuple[float, f
     latitude = distance * math.cos(radians)
     departure = distance * math.sin(radians)
     return latitude, departure
-
-
-def dms_to_decimal(degrees: int, minutes: int, seconds: float) -> float:
-    sign = -1 if degrees < 0 else 1
-    return sign * (abs(degrees) + minutes / 60.0 + seconds / 3600.0)
-
-
-def format_bearing_dms(bearing_deg: float) -> str:
-    """Format whole-circle bearing as D°M'S\"."""
-    bearing = bearing_deg % 360.0
-    degrees = int(bearing)
-    minutes_float = (bearing - degrees) * 60.0
-    minutes = int(minutes_float)
-    seconds = (minutes_float - minutes) * 60.0
-    return f'{degrees}°{minutes:02d}\'{seconds:05.2f}"'
 
 
 def _compass_corrections(

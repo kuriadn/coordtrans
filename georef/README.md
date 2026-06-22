@@ -1,33 +1,34 @@
 # georef
 
-Cassini-Soldner and UTM georeferencing library (NLIMS Directorate, National Land Commission).
+Cassini-Soldner and UTM georeferencing library (NLIMS / Fayvad Geosolutions), merged into Fayvad Survey.
 
-Merged into [Fayvad Survey](https://github.com/kuriadn/coordtrans) as the `georef` Python package.
+## Production modules
 
-## Modules
+| Module | Role | Exposed via |
+|--------|------|-------------|
+| `affine.py` | 4-parameter affine least-squares | **Coordinate Transform** (sheet + custom modes) |
+| `cassini_tables.py` | NLIMS log-table Cassini ↔ geographic | **CRS Transform** (`tables-*` presets) |
+| `cassini_proj.py` | Panel central meridian, PROJ4 `lon_0` override | **CRS Transform** (custom Cassini + tables) |
+| `utilities.py` | Backward-compatible re-exports | Internal / CLI |
 
-| Module | Purpose |
-|--------|---------|
-| `utilities.py` | Affine transform core (`genCoeffMatrix`, `compute`), Cassini helpers |
-| `georef.py` | CLI affine transformation from CSV control points |
-| `cassini.py` | Cassini-Soldner projection utilities |
-| `cassproc.py` | Cassini processing pipeline |
-| `cass_utm.py` | Cassini ↔ UTM conversion |
-| `cassproj4.py` | PROJ4 string helpers |
-| `casstables.py` | Cassini table data |
-| `anglemanip.py` | Angle conversion utilities |
+## Archived
 
-## CLI usage
+Legacy research scripts live in `georef/research/` (not imported by the web app).
 
-From the project root:
+## CLI
 
 ```bash
-python -m georef.georef -i control_points.csv
-python -m georef.georef -v -i control_points.csv -o output.csv
+python -m georef.georef -i control_points.csv -v
 ```
 
-Input CSV: four columns per control point (`from_x, from_y, to_x, to_y`) for fitting, or two columns (`x, y`) for points to transform.
+CSV format: four columns per control pair (`from_x,from_y,to_x,to_y`), then two columns per point to transform.
 
 ## Django integration
 
-The web coordinate transform tool (`coordtrans`) uses this library via `fayvadgeo/georef.py`, which imports `genCoeffMatrix` and `compute` from `georef.utilities`.
+| App | Uses georef for |
+|-----|-----------------|
+| `coordtrans` | Sheet affine + custom control-point affine (`coordtrans/compute.py`) |
+| `crstrans` | Log-table Cassini presets (`crstrans/compute.transform_points_tables`) |
+| `geocalc`, `traverse`, `areacalc` | Shared DMS via `fayvadgeo/survey_math.py` (not georef-specific) |
+
+Django orchestration lives in `coordtrans/` and `crstrans/` — not in `fayvadgeo/georef.py` (removed).

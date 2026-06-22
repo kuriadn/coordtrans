@@ -12,7 +12,7 @@
   {% include "_sidenav.html" with active_link="file" %}
   <div class="flex-1 p-4 md:p-8 max-w-2xl">
     <h1 class="text-2xl font-bold mb-6">Transform coordinates from file</h1>
-    <p class="text-slate-600 mb-6">Upload a text file with one point per line: <code class="text-sm bg-slate-100 px-1 rounded">easting,northing</code></p>
+    <p class="text-slate-600 mb-6">Upload a text file with one point per line: <code class="text-sm bg-slate-100 px-1 rounded">easting,northing</code>. For custom affine, include four-column control rows (<code>from_e,from_n,to_e,to_n</code>) before two-column points.</p>
 
     <form method="post" enctype="multipart/form-data" class="card space-y-4">
       {% csrf_token %}

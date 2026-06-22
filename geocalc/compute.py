@@ -28,18 +28,7 @@ class BearingDistanceResult:
     departure: float
 
 
-def dms_to_decimal(degrees: int, minutes: int, seconds: float) -> float:
-    sign = -1 if degrees < 0 else 1
-    return sign * (abs(degrees) + minutes / 60.0 + seconds / 3600.0)
-
-
-def format_bearing_dms(bearing_deg: float) -> str:
-    bearing = bearing_deg % 360.0
-    degrees = int(bearing)
-    minutes_float = (bearing - degrees) * 60.0
-    minutes = int(minutes_float)
-    seconds = (minutes_float - minutes) * 60.0
-    return f'{degrees}°{minutes:02d}\'{seconds:05.2f}"'
+from fayvadgeo.survey_math import dms_to_decimal, format_bearing_dms
 
 
 def _components(bearing_deg: float, distance: float) -> tuple[float, float]:

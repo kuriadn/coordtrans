@@ -37,6 +37,13 @@
           {% render_field setup_form.preset class="form-input" @change="preset = $event.target.value" %}
         </div>
 
+        <div x-show="preset.startsWith('tables-') || preset === 'custom'" x-cloak>
+          <label class="form-label" for="{{ setup_form.central_meridian.id_for_label }}">{{ setup_form.central_meridian.label }}</label>
+          {% render_field setup_form.central_meridian class="form-input" %}
+          <p class="text-xs text-slate-500 mt-1">{{ setup_form.central_meridian.help_text }}</p>
+          {% if setup_form.central_meridian.errors %}<p class="text-sm text-red-600 mt-1">{{ setup_form.central_meridian.errors|join:', ' }}</p>{% endif %}
+        </div>
+
         <div x-show="preset === 'custom'" x-cloak class="space-y-4">
           <div>
             <label class="form-label" for="{{ setup_form.source_crs.id_for_label }}">{{ setup_form.source_crs.label }}</label>

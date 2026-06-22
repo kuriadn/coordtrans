@@ -10,8 +10,14 @@
 {% block container %}
 <div class="app-main with-sidebar flex flex-col">
   {% include "_sidenav.html" with active_link="points" %}
-  <div class="flex-1 p-4 md:p-8 max-w-4xl">
-    <h1 class="text-2xl font-bold mb-6">Enter coordinates to transform</h1>
+  <div class="flex-1 p-4 md:p-8 max-w-4xl"
+       x-data="{ method: '{{ formset.0.method.value|default:"sheet" }}' }">
+    <h1 class="text-2xl font-bold mb-2">Enter coordinates to transform</h1>
+    <p class="text-slate-600 mb-6 text-sm">
+      <strong>Sheet</strong> uses cadastral control data in the database.
+      <strong>Custom</strong> fits your own control point pairs (from the merged georef library).
+      For PROJ/pyproj reprojection use <a href="{% url 'crstrans:transform' %}" class="text-primary-600 underline">CRS Transform</a>.
+    </p>
 
     <form method="post" class="space-y-6">
       {% csrf_token %}
@@ -21,14 +27,59 @@
         {% if formset.0.non_field_errors %}
           <div class="alert alert-warning mb-4">{{ formset.0.non_field_errors }}</div>
         {% endif %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {% for field in formset.0 %}
+        <div class="space-y-4">
+          <div>
+            <span class="form-label block mb-2">Method</span>
+            {% for radio in formset.0.method %}
+              <label class="inline-flex items-center gap-2 mr-4 mb-2" @click="method = $el.querySelector('input').value">
+                {{ radio.tag }}
+                <span>{{ radio.choice_label }}</span>
+              </label>
+            {% endfor %}
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {% render_field field class="form-input" %}
+              <label class="form-label" for="{{ formset.0.trtype.id_for_label }}">{{ formset.0.trtype.label }}</label>
+              {% render_field formset.0.trtype class="form-input" %}
+            </div>
+            <div x-show="method === 'sheet'" x-cloak>
+              <label class="form-label" for="{{ formset.0.shtno.id_for_label }}">{{ formset.0.shtno.label }}</label>
+              {% render_field formset.0.shtno class="form-input" %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" x-show="method === 'custom'" x-cloak>
+        <h2 class="text-lg font-semibold mb-2">Control point pairs</h2>
+        <p class="text-sm text-slate-600 mb-4">At least two pairs (from system → to system) to fit the affine parameters.</p>
+        {{ formset.2.management_form }}
+        {% if formset.2.non_form_errors %}
+          <div class="alert alert-warning mb-4">{{ formset.2.non_form_errors }}</div>
+        {% endif %}
+        <div id="ctrl_form_set" class="space-y-4">
+          {% for form in formset.2 %}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg">
+              {% for field in form %}
+                <div>
+                  <label class="form-label text-xs" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  {% render_field field class="form-input" %}
+                </div>
+              {% endfor %}
             </div>
           {% endfor %}
         </div>
+        <template id="empty_ctrl_form">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg">
+            {% for field in formset.2.empty_form %}
+              <div>
+                <label class="form-label text-xs">{{ field.label }}</label>
+                {% render_field field class="form-input" %}
+              </div>
+            {% endfor %}
+          </div>
+        </template>
+        <button type="button" class="btn btn-secondary mt-4" id="add_control">Add control pair</button>
       </div>
 
       {{ formset.1.management_form }}
@@ -72,4 +123,5 @@
 {% block scripts %}
 {% load static %}
 <script src="{% static 'site/js/formset.js' %}"></script>
+<script src="{% static 'site/js/affine-formset.js' %}"></script>
 {% endblock %}

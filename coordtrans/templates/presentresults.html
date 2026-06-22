@@ -23,12 +23,28 @@
 
     <div class="card mb-6">
       <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div><dt class="text-slate-500">Method</dt><dd class="font-semibold">{{ transform_mode|default:"sheet"|title }}</dd></div>
         <div><dt class="text-slate-500">Transformation to</dt><dd class="font-semibold">{{ data.0.1 }}</dd></div>
-        <div><dt class="text-slate-500">Sheet number</dt><dd class="font-semibold">{{ data.0.0 }}</dd></div>
+        <div><dt class="text-slate-500">{% if transform_mode == 'custom' %}Reference{% else %}Sheet number{% endif %}</dt><dd class="font-semibold">{{ data.0.0 }}</dd></div>
         <div><dt class="text-slate-500">Points input</dt><dd class="font-semibold">{{ data.0.2 }}</dd></div>
         <div><dt class="text-slate-500">Valid points</dt><dd class="font-semibold">{{ data.0.3 }}</dd></div>
       </dl>
     </div>
+
+    {% if diagnostics %}
+    <div class="card mb-6">
+      <h2 class="text-lg font-semibold mb-3">Affine parameters</h2>
+      <dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div><dt class="text-slate-500">Scale</dt><dd class="font-mono">{{ diagnostics.scale|floatformat:5 }}</dd></div>
+        <div><dt class="text-slate-500">Rotation</dt><dd class="font-mono">{{ diagnostics.rotation|floatformat:8 }}</dd></div>
+        <div><dt class="text-slate-500">ΔX</dt><dd class="font-mono">{{ diagnostics.translate_x|floatformat:2 }}</dd></div>
+        <div><dt class="text-slate-500">ΔY</dt><dd class="font-mono">{{ diagnostics.translate_y|floatformat:2 }}</dd></div>
+      </dl>
+      {% if diagnostics.residuals %}
+      <p class="text-xs text-slate-500 mt-3">Fit residuals: {{ diagnostics.residuals|join:", " }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
 
     {% if map_data %}
     <div class="view-tabs">

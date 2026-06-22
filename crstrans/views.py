@@ -1,10 +1,10 @@
 from django.conf import settings
 from django.shortcuts import render
 
-from .compute import read_points_file, transform_points
+from .compute import read_points_file, transform_points, transform_points_tables
 from .forms import CrsFileForm, CrsPointFormSet, CrsSetupForm
 from .map_utils import build_crs_map_context
-from .presets import preset_label
+from .presets import is_table_preset, preset_label
 
 
 def _results_context(result):
@@ -16,8 +16,15 @@ def _results_context(result):
 
 
 def _run_transform(setup_form, points):
-    source, target = setup_form.resolve_crs_pair()
     preset = setup_form.cleaned_data['preset']
+    if is_table_preset(preset):
+        return transform_points_tables(
+            preset=preset,
+            points=points,
+            central_meridian=float(setup_form.cleaned_data['central_meridian']),
+            preset_label_text=preset_label(preset),
+        )
+    source, target = setup_form.resolve_crs_pair()
     return transform_points(
         source_crs=source,
         target_crs=target,

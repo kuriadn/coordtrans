@@ -6,10 +6,10 @@ def site(request):
     tools = [
         {
             'slug': 'coord-transform',
-            'name': 'Coordinate Transform (sheet)',
+            'name': 'Coordinate Transform',
             'description': (
-                'Sheet-based affine Cassini-Soldner ↔ UTM using four control points '
-                'per cadastral sheet. For official local fit.'
+                'Affine Cassini-Soldner ↔ UTM: cadastral sheet mode (database controls) '
+                'or custom control-point mode with fitted parameters and residuals.'
             ),
             'url': reverse('coords:enterpoints'),
             'status': 'live',
@@ -27,8 +27,8 @@ def site(request):
             'slug': 'crs-transform',
             'name': 'CRS Transform (PROJ)',
             'description': (
-                'Default PROJ4 / EPSG reprojection (pyproj) — Cassini ↔ UTM, WGS84, '
-                'or custom CRS strings. General-purpose; no sheet correction.'
+                'PROJ4 / EPSG reprojection via pyproj, plus NLIMS log-table Cassini '
+                'with configurable central meridian. General-purpose; no sheet correction.'
             ),
             'url': reverse('crstrans:transform'),
             'status': 'live',

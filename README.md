@@ -50,13 +50,19 @@ Default CRS definitions: `MAP_CASSINI_PROJ4` and `MAP_UTM_EPSG` in `fayvadgeo/se
 
 ## georef library
 
-The [kuriadn/georef](https://github.com/kuriadn/georef) Cassini/UTM library is merged into this repo under `georef/`. The web coordinate transform uses `georef.utilities` for affine math; Django views and models live in `fayvadgeo/georef.py`.
+The [kuriadn/georef](https://github.com/kuriadn/georef) library is merged under `georef/` and wired into existing tools (no duplicate apps):
 
-```bash
-python -m georef.georef -i control_points.csv
-```
+| Capability | Where users access it |
+|------------|----------------------|
+| Sheet affine transform | `/coord_trans/` → **Cadastral sheet** method |
+| Custom control-point affine + parameters/residuals | `/coord_trans/` → **Custom control points** method |
+| PROJ/pyproj CRS transform | `/crs/` → standard presets |
+| NLIMS log-table Cassini | `/crs/` → `Cassini (log tables)` presets + central meridian |
+| DMS / bearing formatting | `/bearing/`, `/traverse/`, `/area/` via shared `fayvadgeo/survey_math.py` |
 
-See `georef/README.md` for module reference.
+CLI: `python -m georef.georef -i control_points.csv -v`
+
+See `georef/README.md` for module reference. Research scripts are in `georef/research/`.
 
 ## Input file format (point uploads)
 

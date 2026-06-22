@@ -45,13 +45,7 @@ class AreaResult:
     perimeter_m: float = 0.0
 
 
-def format_bearing_dms(bearing_deg: float) -> str:
-    bearing = bearing_deg % 360.0
-    degrees = int(bearing)
-    minutes_float = (bearing - degrees) * 60.0
-    minutes = int(minutes_float)
-    seconds = (minutes_float - minutes) * 60.0
-    return f'{degrees}°{minutes:02d}\'{seconds:05.2f}"'
+from fayvadgeo.survey_math import format_bearing_dms
 
 
 def _edge_components(e1: float, n1: float, e2: float, n2: float) -> tuple[float, float, float]:

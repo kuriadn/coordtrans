@@ -18,18 +18,28 @@ def _utm_epsg() -> int:
 
 
 PRESET_CHOICES = (
-    ('cassini-utm', 'Cassini-Soldner → UTM 37N (default)'),
-    ('utm-cassini', 'UTM 37N → Cassini-Soldner'),
+    ('cassini-utm', 'Cassini-Soldner → UTM 37N (PROJ, default)'),
+    ('utm-cassini', 'UTM 37N → Cassini-Soldner (PROJ)'),
     ('utm-wgs84', 'UTM 37N → WGS84 (lat/lon)'),
     ('cassini-wgs84', 'Cassini-Soldner → WGS84 (lat/lon)'),
     ('wgs84-utm', 'WGS84 (lat/lon) → UTM 37N'),
+    ('tables-cassini-wgs84', 'Cassini (log tables) → WGS84'),
+    ('tables-wgs84-cassini', 'WGS84 → Cassini (log tables)'),
     ('custom', 'Custom PROJ4 / EPSG'),
 )
+
+TABLE_PRESETS = frozenset({'tables-cassini-wgs84', 'tables-wgs84-cassini'})
+
+
+def is_table_preset(preset_key: str) -> bool:
+    return preset_key in TABLE_PRESETS
 
 
 def resolve_preset(preset_key: str) -> tuple[str, str | int]:
     cass = _cassini_proj4()
     utm = _utm_epsg()
+    if preset_key in TABLE_PRESETS:
+        raise ValueError(f'Table preset {preset_key} is resolved at transform time.')
     mapping = {
         'cassini-utm': (cass, utm),
         'utm-cassini': (utm, cass),
