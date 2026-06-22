@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}CRS results — {% include "_brandname.html" %}{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link href="{% static 'site/css/map.css' %}" rel="stylesheet">
+{% if GOOGLE_MAPS_API_KEY %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script>
+{% endif %}
+{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link="tools" %}
+{% endblock %}
+
+{% block container %}
+<div class="app-main with-sidebar flex flex-col">
+  {% include "crstrans/_sidenav.html" with active_link="transform" %}
+  <div class="flex-1 p-4 md:p-8" x-data="{ view: 'map' }">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <h1 class="text-2xl font-bold">CRS transform results</h1>
+      <div class="flex gap-2">
+        <a class="btn btn-secondary" href="{% url 'crstrans:transform' %}">New transform</a>
+        <a class="btn btn-secondary" href="{% url 'crstrans:upload' %}">Upload file</a>
+      </div>
+    </div>
+
+    <div class="card mb-6 text-sm space-y-3">
+      <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <dt class="text-slate-500">Preset</dt>
+          <dd class="font-semibold">{{ result.preset_label }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Points</dt>
+          <dd class="font-semibold">{{ result.success_count }} / {{ result.input_count }}</dd>
+        </div>
+      </dl>
+      <div>
+        <dt class="text-slate-500 text-xs uppercase tracking-wide mb-1">Source CRS</dt>
+        <dd class="font-mono text-xs break-all bg-slate-50 p-2 rounded">{{ result.source_crs }}</dd>
+      </div>
+      <div>
+        <dt class="text-slate-500 text-xs uppercase tracking-wide mb-1">Target CRS</dt>
+        <dd class="font-mono text-xs break-all bg-slate-50 p-2 rounded">{{ result.target_crs }}</dd>
+      </div>
+    </div>
+
+    <div class="view-tabs">
+      <button type="button" class="view-tab" :class="{ 'active': view === 'map' }"
+              @click="view = 'map'; $nextTick(() => window.fayvadGeoMapApi && window.fayvadGeoMapApi.invalidate())">Map view</button>
+      <button type="button" class="view-tab" :class="{ 'active': view === 'table' }" @click="view = 'table'">Table view</button>
+    </div>
+
+    <div x-show="view === 'map'" x-cloak class="map-shell mb-8">
+      {% if not map_data.georef_ok %}
+      <div class="alert alert-info mb-4">Map preview requires coordinates that can be shown on a geographic basemap.</div>
+      {% endif %}
+      <div id="transform-map"></div>
+      <div class="map-toolbar">
+        <div class="map-tool-row">
+          <button type="button" class="map-icon-btn" id="map-zoom-in" title="Zoom in">+</button>
+          <button type="button" class="map-icon-btn" id="map-zoom-out" title="Zoom out">−</button>
+          <button type="button" class="map-icon-btn" id="map-fit" title="Fit">&#8982;</button>
+          <button type="button" class="map-icon-btn" id="map-reset" title="Reset">&#8962;</button>
+        </div>
+        {% if map_data.georef_ok %}
+        <div class="map-toolbar-panel">
+          <h3>Basemap</h3>
+          <div class="map-basemap-options">
+            <label><input type="radio" name="basemap" value="osm" checked> OpenStreetMap</label>
+            <label><input type="radio" name="basemap" value="esriStreet"> Esri Street</label>
+            <label><input type="radio" name="basemap" value="esriImagery"> Esri Imagery</label>
+            {% if GOOGLE_MAPS_API_KEY %}
+            <label><input type="radio" name="basemap" value="google"> Google Maps</label>
+            {% endif %}
+          </div>
+        </div>
+        <div class="map-toolbar-panel">
+          <h3>Layers</h3>
+          <div class="map-basemap-options">
+            <label><input type="checkbox" id="layer-input" checked> Source</label>
+            <label><input type="checkbox" id="layer-output" checked> Target</label>
+            <label><input type="checkbox" id="layer-links" checked> Shift vectors</label>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="map-legend">
+        <div class="map-legend-item"><span class="map-swatch input"></span> Source</div>
+        <div class="map-legend-item"><span class="map-swatch output"></span> Target</div>
+        <div class="map-legend-item"><span class="map-swatch link"></span> Shift</div>
+      </div>
+    </div>
+
+    <div x-show="view === 'table'" x-cloak>
+      <div class="table-wrap">
+        <table class="data-table text-sm">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th colspan="2" class="text-center">Source {% if result.source_geographic %}(lon/lat){% else %}(E/N){% endif %}</th>
+              <th colspan="2" class="text-center">Target {% if result.target_geographic %}(lon/lat){% else %}(E/N){% endif %}</th>
+            </tr>
+            <tr>
+              <th></th>
+              <th class="text-right">{% if result.source_geographic %}Lon{% else %}E{% endif %}</th>
+              <th class="text-right">{% if result.source_geographic %}Lat{% else %}N{% endif %}</th>
+              <th class="text-right">{% if result.target_geographic %}Lon{% else %}E{% endif %}</th>
+              <th class="text-right">{% if result.target_geographic %}Lat{% else %}N{% endif %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in result.rows %}
+            <tr>
+              <td>{{ row.index }}</td>
+              <td class="text-right font-mono">{{ row.in_x|floatformat:4 }}</td>
+              <td class="text-right font-mono">{{ row.in_y|floatformat:4 }}</td>
+              <td class="text-right font-mono">{{ row.out_x|floatformat:4 }}</td>
+              <td class="text-right font-mono">{{ row.out_y|floatformat:4 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ map_data|json_script:"transform-map-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+{% if GOOGLE_MAPS_API_KEY %}
+<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@0.15.0/dist/Leaflet.GoogleMutant.js"></script>
+{% endif %}
+<script>
+  document.getElementById('transform-map-data').setAttribute(
+    'data-google-key', '{{ GOOGLE_MAPS_API_KEY|escapejs }}'
+  );
+</script>
+<script src="{% static 'site/js/map.js' %}"></script>
+{% endblock %}

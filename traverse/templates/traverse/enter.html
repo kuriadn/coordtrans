@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load widget_tweaks static %}
+
+{% block title %}Traverse adjustment — {% include "_brandname.html" %}{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link="tools" %}
+{% endblock %}
+
+{% block container %}
+<div class="app-main with-sidebar flex flex-col">
+  {% include "traverse/_sidenav.html" with active_link="adjust" %}
+  <div class="flex-1 p-4 md:p-8 max-w-5xl">
+    <h1 class="text-2xl font-bold mb-2">Traverse adjustment</h1>
+    <p class="text-slate-600 mb-6">
+      Enter whole-circle bearings (clockwise from north) and horizontal distances.
+      Closed traverses are balanced with the Compass or Transit rule.
+    </p>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <div class="card">
+        <h2 class="text-lg font-semibold mb-4">Setup</h2>
+        {% if setup_form.non_field_errors %}
+          <div class="alert alert-warning mb-4">{{ setup_form.non_field_errors }}</div>
+        {% endif %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for field in setup_form %}
+            <div class="{% if field.name == 'method' %}md:col-span-2{% endif %}">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {% render_field field class="form-input" %}
+              {% if field.help_text %}
+                <p class="text-xs text-slate-500 mt-1">{{ field.help_text }}</p>
+              {% endif %}
+              {% if field.errors %}<p class="text-sm text-red-600 mt-1">{{ field.errors|join:', ' }}</p>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {{ leg_formset.management_form }}
+      <div class="card">
+        <h2 class="text-lg font-semibold mb-4">Traverse legs</h2>
+        {% if leg_formset.non_form_errors %}
+          <div class="alert alert-warning mb-4">{{ leg_formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="hidden md:grid grid-cols-12 gap-2 text-xs font-semibold uppercase text-slate-500 mb-2 px-1">
+          <span class="col-span-2">From</span>
+          <span class="col-span-2">To</span>
+          <span class="col-span-1">°</span>
+          <span class="col-span-1">′</span>
+          <span class="col-span-2">″</span>
+          <span class="col-span-4">Distance (m)</span>
+        </div>
+
+        <div id="traverse_form_set" class="space-y-3">
+          {% for form in leg_formset %}
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 bg-slate-50 rounded-lg">
+              <div class="md:col-span-2">
+                <label class="form-label md:sr-only">From</label>
+                {% render_field form.from_station class="form-input" placeholder="From" %}
+              </div>
+              <div class="md:col-span-2">
+                <label class="form-label md:sr-only">To</label>
+                {% render_field form.to_station class="form-input" placeholder="To" %}
+              </div>
+              <div class="md:col-span-1">
+                <label class="form-label md:sr-only">Degrees</label>
+                {% render_field form.bearing_deg class="form-input" %}
+              </div>
+              <div class="md:col-span-1">
+                <label class="form-label md:sr-only">Minutes</label>
+                {% render_field form.bearing_min class="form-input" %}
+              </div>
+              <div class="md:col-span-2">
+                <label class="form-label md:sr-only">Seconds</label>
+                {% render_field form.bearing_sec class="form-input" %}
+              </div>
+              <div class="md:col-span-4">
+                <label class="form-label md:sr-only">Distance</label>
+                {% render_field form.distance class="form-input" %}
+              </div>
+              {% if form.errors %}
+                <div class="md:col-span-12 text-sm text-red-600">{{ form.errors }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <template id="traverse_empty_form">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 bg-slate-50 rounded-lg">
+            {% for field in leg_formset.empty_form %}
+              <div class="{% if field.name == 'from_station' or field.name == 'to_station' %}md:col-span-2{% elif field.name == 'bearing_deg' or field.name == 'bearing_min' %}md:col-span-1{% elif field.name == 'bearing_sec' %}md:col-span-2{% else %}md:col-span-4{% endif %}">
+                {% render_field field class="form-input" %}
+              </div>
+            {% endfor %}
+          </div>
+        </template>
+
+        <button type="button" class="btn btn-secondary btn-sm mt-4" id="traverse_add_leg">Add leg</button>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit" class="btn btn-primary">Compute traverse</button>
+        <a class="btn btn-secondary" href="{% url 'home' %}#tools">All tools</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'site/js/traverse-formset.js' %}"></script>
+{% endblock %}

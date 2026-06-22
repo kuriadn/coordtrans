@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bearing &amp; distance results — {% include "_brandname.html" %}{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link href="{% static 'site/css/map.css' %}" rel="stylesheet">
+{% if GOOGLE_MAPS_API_KEY %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script>
+{% endif %}
+{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link="tools" %}
+{% endblock %}
+
+{% block container %}
+<div class="app-main with-sidebar flex flex-col">
+  {% include "geocalc/_sidenav.html" with active_link="compute" %}
+  <div class="flex-1 p-4 md:p-8" x-data="{ view: 'map' }">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <h1 class="text-2xl font-bold">
+        {% if result.mode == 'forward' %}Polar (forward){% else %}Join (inverse){% endif %} result
+      </h1>
+      <a class="btn btn-secondary" href="{% url 'geocalc:compute' %}">New computation</a>
+    </div>
+
+    <div class="card mb-6">
+      <dl class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div>
+          <dt class="text-slate-500">From</dt>
+          <dd class="font-semibold">{{ result.from_point.label }}</dd>
+          <dd class="font-mono text-xs text-slate-600">E {{ result.from_point.easting|floatformat:3 }}, N {{ result.from_point.northing|floatformat:3 }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">To</dt>
+          <dd class="font-semibold">{{ result.to_point.label }}</dd>
+          <dd class="font-mono text-xs text-slate-600">E {{ result.to_point.easting|floatformat:3 }}, N {{ result.to_point.northing|floatformat:3 }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Horizontal distance</dt>
+          <dd class="font-semibold">{{ result.distance|floatformat:3 }} m</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Whole-circle bearing</dt>
+          <dd class="font-semibold font-mono">{{ result.bearing_label }}</dd>
+          <dd class="text-xs text-slate-600">{{ result.bearing_deg|floatformat:6 }}°</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Latitude (ΔN)</dt>
+          <dd class="font-semibold font-mono">{{ result.latitude|floatformat:4 }} m</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Departure (ΔE)</dt>
+          <dd class="font-semibold font-mono">{{ result.departure|floatformat:4 }} m</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="view-tabs">
+      <button type="button" class="view-tab" :class="{ 'active': view === 'map' }"
+              @click="view = 'map'; $nextTick(() => window.fayvadGeocalcMapApi && window.fayvadGeocalcMapApi.invalidate())">Map view</button>
+      <button type="button" class="view-tab" :class="{ 'active': view === 'summary' }" @click="view = 'summary'">Summary</button>
+    </div>
+
+    <div x-show="view === 'map'" x-cloak class="map-shell mb-8">
+      {% if map_data.mode == 'plan' %}
+      <div class="alert alert-info mb-4">
+        Plan view — local grid coordinates. Use UTM eastings/northings for a georeferenced basemap.
+      </div>
+      {% endif %}
+      <div id="geocalc-map"></div>
+      <div class="map-toolbar">
+        <div class="map-tool-row">
+          <button type="button" class="map-icon-btn" id="geocalc-map-zoom-in" title="Zoom in">+</button>
+          <button type="button" class="map-icon-btn" id="geocalc-map-zoom-out" title="Zoom out">−</button>
+          <button type="button" class="map-icon-btn" id="geocalc-map-fit" title="Fit">&#8982;</button>
+          <button type="button" class="map-icon-btn" id="geocalc-map-reset" title="Reset">&#8962;</button>
+        </div>
+        {% if map_data.mode == 'geographic' %}
+        <div class="map-toolbar-panel">
+          <h3>Basemap</h3>
+          <div class="map-basemap-options">
+            <label><input type="radio" name="geocalc-basemap" value="osm" checked> OpenStreetMap</label>
+            <label><input type="radio" name="geocalc-basemap" value="esriStreet"> Esri Street</label>
+            <label><input type="radio" name="geocalc-basemap" value="esriImagery"> Esri Imagery</label>
+            {% if GOOGLE_MAPS_API_KEY %}
+            <label><input type="radio" name="geocalc-basemap" value="google"> Google Maps</label>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="map-legend">
+        <div class="map-legend-item"><span class="map-swatch traverse-start"></span> From</div>
+        <div class="map-legend-item"><span class="map-swatch traverse-station"></span> To</div>
+        <div class="map-legend-item"><span class="map-swatch traverse-line"></span> Leg</div>
+      </div>
+    </div>
+
+    <div x-show="view === 'summary'" x-cloak class="card">
+      {% if result.mode == 'forward' %}
+      <p class="mb-4">
+        From <strong>{{ result.from_point.label }}</strong>, on a bearing of
+        <strong>{{ result.bearing_label }}</strong> for <strong>{{ result.distance|floatformat:3 }} m</strong>,
+        the computed position of <strong>{{ result.to_point.label }}</strong> is:
+      </p>
+      {% else %}
+      <p class="mb-4">
+        Joining <strong>{{ result.from_point.label }}</strong> to <strong>{{ result.to_point.label }}</strong>:
+      </p>
+      {% endif %}
+      <ul class="list-disc pl-5 space-y-2 text-sm">
+        <li>End easting: <span class="font-mono font-semibold">{{ result.to_point.easting|floatformat:3 }}</span></li>
+        <li>End northing: <span class="font-mono font-semibold">{{ result.to_point.northing|floatformat:3 }}</span></li>
+        <li>Distance: <span class="font-mono font-semibold">{{ result.distance|floatformat:3 }} m</span></li>
+        <li>Bearing: <span class="font-mono font-semibold">{{ result.bearing_label }}</span></li>
+        <li>Latitude ΔN: <span class="font-mono">{{ result.latitude|floatformat:4 }} m</span></li>
+        <li>Departure ΔE: <span class="font-mono">{{ result.departure|floatformat:4 }} m</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+{{ map_data|json_script:"geocalc-map-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+{% if GOOGLE_MAPS_API_KEY %}
+<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@0.15.0/dist/Leaflet.GoogleMutant.js"></script>
+{% endif %}
+<script>
+  document.getElementById('geocalc-map-data').setAttribute(
+    'data-google-key', '{{ GOOGLE_MAPS_API_KEY|escapejs }}'
+  );
+</script>
+<script src="{% static 'site/js/geocalc-map.js' %}"></script>
+{% endblock %}

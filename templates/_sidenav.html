@@ -1,35 +1,66 @@
-<nav class="navbar navbar-inverse sidebar" role="navigation">
-    <div class="container-fluid">
-		<!-- Brand and toggle get grouped for better mobile display -->
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-sidebar-navbar-collapse-1">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			<a class="navbar-brand" href="{% url 'home' %}">Ultigeo Center</a>
-		</div>
-		<!-- Collect the nav links, forms, and other content for toggling -->
-		<div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
-			<ul class="nav navbar-nav">
-				<li class="dropdown {%if active_link == "control point" or active_link == "sheet" or active_link == "transformation request" %} active{%endif%}">
-					<a href="#" class="dropdown-toggle" data-toggle="dropdown">Main Data<span class="caret"></span><span style="font-size:14px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-globe"></span></a>
-					<ul class="dropdown-menu forAnimate" role="menu">
-	                    <li {% if active_link == "control point" %}class="active"{% endif %}><a href="{% url 'coords:controlpoint_list' %}">Control Points</a></li>
-	                    <li {% if active_link == "sheet" %}class="active"{% endif %}><a href="{% url 'coords:sheetreference_list' %}">Sheets</a></li>
-	                    <li {% if active_link == "transformation request" %}class="active"{% endif %}><a href="{% url 'coords:transrequest_list' %}">Transformations</a></li>
-					</ul>
-				</li>
-				<li class="dropdown {%if active_link == "points" or active_link == "file" %}active{%endif%}">
-					<a href="#" class="dropdown-toggle" data-toggle="dropdown">Transforms<span class="caret"></span><span style="font-size:14px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-asterisk"></span></a>
-					<ul class="dropdown-menu forAnimate" role="menu">
-						<li  {% if active_link == "points" %}class="active"{% endif %}><a href="{% url 'coords:enterpoints' %}">Enter Points</a></li>
-						<li  {% if active_link == "file" %}class="active"{% endif %}><a href="{% url 'coords:getfile' %}">Get File</a></li>
-					</ul>
-				</li>
-
-			</ul>
-		</div>
-	</div>
-</nav>
+<aside class="app-sidebar" id="app-sidebar"
+       x-data="{ open: false, mainData: {% if active_link == 'control point' or active_link == 'sheet' or active_link == 'transformation request' %}true{% else %}false{% endif %}, transforms: {% if active_link == 'points' or active_link == 'file' %}true{% else %}false{% endif %} }"
+       :class="{ 'open': open }">
+  <nav aria-label="Application">
+    <ul class="app-sidebar-nav">
+      <li>
+        <a href="{% url 'home' %}#tools" class="app-sidebar-link">All tools</a>
+      </li>
+      <li class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Coordinate Transform</li>
+      {% if user.is_staff %}
+      <li>
+        <button type="button" class="app-sidebar-group-btn" @click="mainData = !mainData">
+          <span>Main Data</span><span x-text="mainData ? '−' : '+'"></span>
+        </button>
+        <ul class="app-sidebar-sub" x-show="mainData" x-cloak>
+          <li><a href="{% url 'coords:controlpoint_list' %}"
+                 class="app-sidebar-link {% if active_link == 'control point' %}active{% endif %}">Control Points</a></li>
+          <li><a href="{% url 'coords:sheetreference_list' %}"
+                 class="app-sidebar-link {% if active_link == 'sheet' %}active{% endif %}">Sheets</a></li>
+          <li><a href="{% url 'coords:transrequest_list' %}"
+                 class="app-sidebar-link {% if active_link == 'transformation request' %}active{% endif %}">Transformations</a></li>
+        </ul>
+      </li>
+      {% endif %}
+      <li>
+        <button type="button" class="app-sidebar-group-btn" @click="transforms = !transforms">
+          <span>Transforms</span><span x-text="transforms ? '−' : '+'"></span>
+        </button>
+        <ul class="app-sidebar-sub" x-show="transforms" x-cloak>
+          <li><a href="{% url 'coords:enterpoints' %}"
+                 class="app-sidebar-link {% if active_link == 'points' %}active{% endif %}">Enter Points</a></li>
+          <li><a href="{% url 'coords:getfile' %}"
+                 class="app-sidebar-link {% if active_link == 'file' %}active{% endif %}">Upload File</a></li>
+        </ul>
+      </li>
+      <li class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Traverse Adjustment</li>
+      <li>
+        <a href="{% url 'traverse:adjust' %}"
+           class="app-sidebar-link {% if active_link == 'traverse' %}active{% endif %}">Adjust traverse</a>
+      </li>
+      <li class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Area &amp; Perimeter</li>
+      <li>
+        <a href="{% url 'areacalc:compute' %}"
+           class="app-sidebar-link {% if active_link == 'area' %}active{% endif %}">Compute parcel</a>
+      </li>
+      <li class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Bearing &amp; Distance</li>
+      <li>
+        <a href="{% url 'geocalc:compute' %}"
+           class="app-sidebar-link {% if active_link == 'geocalc' %}active{% endif %}">Polar / Join</a>
+      </li>
+      <li class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">CRS Transform (PROJ)</li>
+      <li>
+        <a href="{% url 'crstrans:transform' %}"
+           class="app-sidebar-link {% if active_link == 'crs-transform' %}active{% endif %}">Enter points</a>
+      </li>
+      <li>
+        <a href="{% url 'crstrans:upload' %}"
+           class="app-sidebar-link {% if active_link == 'crs-upload' %}active{% endif %}">Upload file</a>
+      </li>
+    </ul>
+  </nav>
+</aside>
+<button type="button" class="btn btn-secondary btn-sm fixed bottom-4 left-4 z-50 md:hidden"
+        onclick="document.getElementById('app-sidebar').classList.toggle('open')">
+  Menu
+</button>

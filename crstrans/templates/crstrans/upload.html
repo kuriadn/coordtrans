@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}CRS file upload — {% include "_brandname.html" %}{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link="tools" %}
+{% endblock %}
+
+{% block container %}
+<div class="app-main with-sidebar flex flex-col">
+  {% include "crstrans/_sidenav.html" with active_link="upload" %}
+  <div class="flex-1 p-4 md:p-8 max-w-2xl"
+       x-data="{ preset: '{% if form.preset.value %}{{ form.preset.value }}{% else %}cassini-utm{% endif %}' }">
+
+    <h1 class="text-2xl font-bold mb-2">CRS transform from file</h1>
+    <p class="text-slate-600 mb-6">
+      One point per line: <code class="text-sm bg-slate-100 px-1 rounded">x,y</code>
+      (easting/northing or lon/lat depending on source CRS). Lines starting with <code>#</code> are ignored.
+    </p>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+
+      <div class="card space-y-4">
+        {% if form.non_field_errors %}
+          <div class="alert alert-warning">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div>
+          <label class="form-label" for="{{ form.preset.id_for_label }}">{{ form.preset.label }}</label>
+          {% render_field form.preset class="form-input" @change="preset = $event.target.value" %}
+        </div>
+
+        <div x-show="preset === 'custom'" x-cloak class="space-y-4">
+          <div>
+            <label class="form-label">{{ form.source_crs.label }}</label>
+            {% render_field form.source_crs class="form-input font-mono text-sm" %}
+          </div>
+          <div>
+            <label class="form-label">{{ form.target_crs.label }}</label>
+            {% render_field form.target_crs class="form-input font-mono text-sm" %}
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" for="{{ form.source.id_for_label }}">{{ form.source.label }}</label>
+          {% render_field form.source class="form-input" %}
+          {% if form.source.errors %}<p class="text-sm text-red-600 mt-1">{{ form.source.errors|join:', ' }}</p>{% endif %}
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <button type="submit" class="btn btn-primary btn-lg">Transform file</button>
+        <a class="btn btn-secondary" href="{% url 'crstrans:transform' %}">Enter points instead</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

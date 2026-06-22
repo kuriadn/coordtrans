@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Bearing &amp; distance — {% include "_brandname.html" %}{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link="tools" %}
+{% endblock %}
+
+{% block container %}
+<div class="app-main with-sidebar flex flex-col">
+  {% include "geocalc/_sidenav.html" with active_link="compute" %}
+  <div class="flex-1 p-4 md:p-8 max-w-3xl"
+       x-data="{ mode: '{% if form.mode.value %}{{ form.mode.value }}{% else %}forward{% endif %}' }">
+
+    <h1 class="text-2xl font-bold mb-2">Bearing &amp; distance</h1>
+    <p class="text-slate-600 mb-6">
+      <strong>Polar (forward):</strong> start point + bearing + distance → end coordinates.<br>
+      <strong>Join (inverse):</strong> two points → bearing and horizontal distance.
+    </p>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <div class="card">
+        <h2 class="text-lg font-semibold mb-4">Computation type</h2>
+        {% if form.non_field_errors %}
+          <div class="alert alert-warning mb-4">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="space-y-2">
+          {% for radio in form.mode %}
+            <label class="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-slate-200 hover:bg-slate-50">
+              <input type="radio" name="mode" value="{{ radio.data.value }}"
+                     {% if radio.data.selected %}checked{% endif %}
+                     @change="mode = $event.target.value">
+              <span class="text-sm">{{ radio.choice_label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card space-y-4">
+        <h2 class="text-lg font-semibold">From point</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="form-label" for="{{ form.from_label.id_for_label }}">{{ form.from_label.label }}</label>
+            {% render_field form.from_label class="form-input" %}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.from_easting.id_for_label }}">{{ form.from_easting.label }}</label>
+            {% render_field form.from_easting class="form-input" %}
+            {% if form.from_easting.errors %}<p class="text-sm text-red-600 mt-1">{{ form.from_easting.errors|join:', ' }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.from_northing.id_for_label }}">{{ form.from_northing.label }}</label>
+            {% render_field form.from_northing class="form-input" %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card space-y-4" x-show="mode === 'forward'">
+        <h2 class="text-lg font-semibold">Polar — bearing &amp; distance</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label class="form-label">{{ form.bearing_deg.label }}</label>
+            {% render_field form.bearing_deg class="form-input" %}
+            {% if form.bearing_deg.errors %}<p class="text-sm text-red-600 mt-1">{{ form.bearing_deg.errors|join:', ' }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label">{{ form.bearing_min.label }}</label>
+            {% render_field form.bearing_min class="form-input" %}
+          </div>
+          <div>
+            <label class="form-label">{{ form.bearing_sec.label }}</label>
+            {% render_field form.bearing_sec class="form-input" %}
+          </div>
+          <div>
+            <label class="form-label">{{ form.distance.label }}</label>
+            {% render_field form.distance class="form-input" %}
+            {% if form.distance.errors %}<p class="text-sm text-red-600 mt-1">{{ form.distance.errors|join:', ' }}</p>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card space-y-4">
+        <h2 class="text-lg font-semibold">
+          <span x-show="mode === 'forward'">To station (label for computed point)</span>
+          <span x-show="mode === 'inverse'" x-cloak>To point</span>
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="form-label" for="{{ form.to_label.id_for_label }}">{{ form.to_label.label }}</label>
+            {% render_field form.to_label class="form-input" %}
+          </div>
+          <div x-show="mode === 'inverse'" x-cloak>
+            <label class="form-label" for="{{ form.to_easting.id_for_label }}">{{ form.to_easting.label }}</label>
+            {% render_field form.to_easting class="form-input" %}
+            {% if form.to_easting.errors %}<p class="text-sm text-red-600 mt-1">{{ form.to_easting.errors|join:', ' }}</p>{% endif %}
+          </div>
+          <div x-show="mode === 'inverse'" x-cloak>
+            <label class="form-label" for="{{ form.to_northing.id_for_label }}">{{ form.to_northing.label }}</label>
+            {% render_field form.to_northing class="form-input" %}
+            {% if form.to_northing.errors %}<p class="text-sm text-red-600 mt-1">{{ form.to_northing.errors|join:', ' }}</p>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit" class="btn btn-primary">Compute</button>
+        <a class="btn btn-secondary" href="{% url 'home' %}#tools">All tools</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

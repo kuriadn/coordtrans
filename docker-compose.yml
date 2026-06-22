@@ -1,0 +1,22 @@
+services:
+  web:
+    build: .
+    container_name: fayvad-survey-web
+    ports:
+      - "${WEB_PORT:-8015}:${APP_PORT:-8015}"
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: fayvadgeo.settings.docker
+      APP_PORT: ${APP_PORT:-8015}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+    restart: unless-stopped
+    command: >
+      gunicorn fayvadgeo.wsgi:application
+      --bind 0.0.0.0:${APP_PORT:-8015}
+      --workers 2
+      --timeout 120

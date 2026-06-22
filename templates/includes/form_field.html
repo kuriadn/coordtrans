@@ -1,0 +1,8 @@
+{% load widget_tweaks %}
+<div class="space-y-1">
+  <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {% render_field field class="form-input" %}
+  {% for error in field.errors %}
+    <p class="form-error">{{ error }}</p>
+  {% endfor %}
+</div>

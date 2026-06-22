@@ -1,0 +1,20 @@
+<aside class="app-sidebar" id="app-sidebar"
+       x-data="{ open: false }"
+       :class="{ 'open': open }">
+  <nav aria-label="Traverse tool">
+    <ul class="app-sidebar-nav">
+      <li>
+        <a href="{% url 'home' %}#tools" class="app-sidebar-link">All tools</a>
+      </li>
+      <li class="pt-2 pb-1 px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Traverse Adjustment</li>
+      <li>
+        <a href="{% url 'traverse:adjust' %}"
+           class="app-sidebar-link {% if active_link == 'adjust' %}active{% endif %}">Adjust traverse</a>
+      </li>
+    </ul>
+  </nav>
+</aside>
+<button type="button" class="btn btn-secondary btn-sm fixed bottom-4 left-4 z-50 md:hidden"
+        onclick="document.getElementById('app-sidebar').classList.toggle('open')">
+  Menu
+</button>

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load widget_tweaks static %}
+
+{% block title %}CRS transform — {% include "_brandname.html" %}{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link="tools" %}
+{% endblock %}
+
+{% block container %}
+<div class="app-main with-sidebar flex flex-col">
+  {% include "crstrans/_sidenav.html" with active_link="transform" %}
+  <div class="flex-1 p-4 md:p-8 max-w-4xl"
+       x-data="{ preset: '{% if setup_form.preset.value %}{{ setup_form.preset.value }}{% else %}cassini-utm{% endif %}' }">
+
+    <h1 class="text-2xl font-bold mb-2">CRS transform (PROJ)</h1>
+    <p class="text-slate-600 mb-2">
+      Default reprojection using PROJ4 / EPSG definitions via pyproj.
+      For sheet-specific affine adjustment, use
+      <a href="{% url 'coords:enterpoints' %}">Coordinate Transform (sheet)</a>.
+    </p>
+    <p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-6">
+      PROJ defaults do not apply local sheet corrections — use sheet transform for official cadastral work.
+    </p>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <div class="card space-y-4">
+        <h2 class="text-lg font-semibold">Coordinate reference systems</h2>
+        {% if setup_form.non_field_errors %}
+          <div class="alert alert-warning">{{ setup_form.non_field_errors }}</div>
+        {% endif %}
+
+        <div>
+          <label class="form-label" for="{{ setup_form.preset.id_for_label }}">{{ setup_form.preset.label }}</label>
+          {% render_field setup_form.preset class="form-input" @change="preset = $event.target.value" %}
+        </div>
+
+        <div x-show="preset === 'custom'" x-cloak class="space-y-4">
+          <div>
+            <label class="form-label" for="{{ setup_form.source_crs.id_for_label }}">{{ setup_form.source_crs.label }}</label>
+            {% render_field setup_form.source_crs class="form-input font-mono text-sm" %}
+            {% if setup_form.source_crs.errors %}<p class="text-sm text-red-600 mt-1">{{ setup_form.source_crs.errors|join:', ' }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label" for="{{ setup_form.target_crs.id_for_label }}">{{ setup_form.target_crs.label }}</label>
+            {% render_field setup_form.target_crs class="form-input font-mono text-sm" %}
+            {% if setup_form.target_crs.errors %}<p class="text-sm text-red-600 mt-1">{{ setup_form.target_crs.errors|join:', ' }}</p>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      {{ point_formset.management_form }}
+      <div class="card">
+        <h2 class="text-lg font-semibold mb-4">Points to transform</h2>
+        {% if point_formset.non_form_errors %}
+          <div class="alert alert-warning mb-4">{{ point_formset.non_form_errors }}</div>
+        {% endif %}
+        <div id="crs_form_set" class="space-y-3">
+          {% for form in point_formset %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg">
+              <div>
+                <label class="form-label">X / E / Lon</label>
+                {% render_field form.easting class="form-input" %}
+              </div>
+              <div>
+                <label class="form-label">Y / N / Lat</label>
+                {% render_field form.northing class="form-input" %}
+              </div>
+              {% if form.errors %}<div class="md:col-span-2 text-sm text-red-600">{{ form.errors }}</div>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <template id="crs_empty_form">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg">
+            {% for field in point_formset.empty_form %}
+              <div>{% render_field field class="form-input" %}</div>
+            {% endfor %}
+          </div>
+        </template>
+        <button type="button" class="btn btn-secondary btn-sm mt-4" id="crs_add_point">Add point</button>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <button type="submit" class="btn btn-primary">Transform</button>
+        <a class="btn btn-secondary" href="{% url 'crstrans:upload' %}">Upload file instead</a>
+        <a class="btn btn-secondary" href="{% url 'home' %}#tools">All tools</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'site/js/crs-formset.js' %}"></script>
+{% endblock %}

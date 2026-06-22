@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Profile',
             fields=[
-                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL, primary_key=True, serialize=False)),
+                ('user', models.OneToOneField(on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL, primary_key=True, serialize=False)),
                 ('slug', models.UUIDField(blank=True, editable=False, default=uuid.uuid4)),
                 ('picture', models.ImageField(upload_to='profile_pics/%Y-%m-%d/', blank=True, verbose_name='Profile picture', null=True)),
                 ('bio', models.CharField(max_length=200, blank=True, verbose_name='Short Bio', null=True)),

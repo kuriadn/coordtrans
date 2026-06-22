@@ -1,0 +1,14 @@
+# Development overrides — live code mount and gunicorn with auto-reload.
+services:
+  web:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      DEBUG: "True"
+    command: >
+      gunicorn fayvadgeo.wsgi:application
+      --bind 0.0.0.0:${APP_PORT:-8015}
+      --workers 2
+      --timeout 120
+      --reload

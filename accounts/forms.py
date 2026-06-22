@@ -1,85 +1,57 @@
 from __future__ import unicode_literals
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
-from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions
 from authtools import forms as authtoolsforms
 from django.contrib.auth import forms as authforms
-from django.core.urlresolvers import reverse
+
+INPUT_CLASS = 'form-input'
+CHECKBOX_CLASS = 'form-checkbox'
+
+
+def _style_fields(form, field_names):
+    for name in field_names:
+        if name in form.fields:
+            if isinstance(form.fields[name].widget, forms.CheckboxInput):
+                form.fields[name].widget.attrs.setdefault('class', CHECKBOX_CLASS)
+            else:
+                form.fields[name].widget.attrs.setdefault('class', INPUT_CLASS)
 
 
 class LoginForm(AuthenticationForm):
-    remember_me = forms.BooleanField(required=False, initial=False)
+    remember_me = forms.BooleanField(required=False, initial=False, label='Remember me')
 
     def __init__(self, *args, **kwargs):
-        super(LoginForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.fields["username"].widget.input_type = "email"  # ugly hack
-
-        self.helper.layout = Layout(
-            Field('username', placeholder="Enter Email", autofocus=""),
-            Field('password', placeholder="Enter Password"),
-            HTML('<a href="{}">Forgot Password?</a>'.format(
-                reverse("accounts:password-reset"))),
-            Field('remember_me'),
-            Submit('sign_in', 'Log in',
-                   css_class="btn btn-lg btn-primary btn-block"),
-            )
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = 'Email'
+        self.fields['username'].widget.input_type = 'email'
+        _style_fields(self, ['username', 'password', 'remember_me'])
 
 
 class SignupForm(authtoolsforms.UserCreationForm):
 
     def __init__(self, *args, **kwargs):
-        super(SignupForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.fields["email"].widget.input_type = "email"  # ugly hack
-
-        self.helper.layout = Layout(
-            Field('email', placeholder="Enter Email", autofocus=""),
-            Field('name', placeholder="Enter Full Name"),
-            Field('password1', placeholder="Enter Password"),
-            Field('password2', placeholder="Re-enter Password"),
-            Submit('sign_up', 'Sign up', css_class="btn-warning"),
-            )
+        super().__init__(*args, **kwargs)
+        self.fields['email'].widget.input_type = 'email'
+        _style_fields(self, ['email', 'name', 'password1', 'password2'])
 
 
 class PasswordChangeForm(authforms.PasswordChangeForm):
 
     def __init__(self, *args, **kwargs):
-        super(PasswordChangeForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-
-        self.helper.layout = Layout(
-            Field('old_password', placeholder="Enter old password",
-                  autofocus=""),
-            Field('new_password1', placeholder="Enter new password"),
-            Field('new_password2', placeholder="Enter new password (again)"),
-            Submit('pass_change', 'Change Password', css_class="btn-warning"),
-            )
+        super().__init__(*args, **kwargs)
+        _style_fields(self, ['old_password', 'new_password1', 'new_password2'])
 
 
 class PasswordResetForm(authtoolsforms.FriendlyPasswordResetForm):
 
     def __init__(self, *args, **kwargs):
-        super(PasswordResetForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-
-        self.helper.layout = Layout(
-            Field('email', placeholder="Enter email",
-                  autofocus=""),
-            Submit('pass_reset', 'Reset Password', css_class="btn-warning"),
-            )
+        super().__init__(*args, **kwargs)
+        self.fields['email'].widget.input_type = 'email'
+        _style_fields(self, ['email'])
 
 
 class SetPasswordForm(authforms.SetPasswordForm):
-    def __init__(self, *args, **kwargs):
-        super(SetPasswordForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
 
-        self.helper.layout = Layout(
-            Field('new_password1', placeholder="Enter new password",
-                  autofocus=""),
-            Field('new_password2', placeholder="Enter new password (again)"),
-            Submit('pass_change', 'Change Password', css_class="btn-warning"),
-            )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _style_fields(self, ['new_password1', 'new_password2'])

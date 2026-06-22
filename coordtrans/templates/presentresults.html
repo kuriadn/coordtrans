@@ -1,79 +1,144 @@
 {% extends 'base.html' %}
-
 {% load static %}
-{% load staticfiles %}
-{% load crispy_forms_tags %}
-{% load widget_tweaks %}
-{% block title %}{{ block.super }} {{ data.0.heading }} {% endblock %}
 
-{% block styles %}
-  {{block.super}}
-  <link href="{% static 'site/css/nav.css' %}" rel="stylesheet">
+{% block title %}Results — {% include "_brandname.html" %}{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link href="{% static 'site/css/map.css' %}" rel="stylesheet">
+{% if GOOGLE_MAPS_API_KEY %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script>
+{% endif %}
 {% endblock %}
 
 {% block navbar-left %}
-  {% include "_navbar.html" with active_link=formset.0 %}
-{% endblock %}
-
-{% block navbar-right %}
-  {% if not user.is_authenticated %}
-<a class="btn btn-default" href="{% url 'accounts:login' %}" role="button">Log in</a>
-  {% else %}
-    {{ block.super }}
-  {% endif %}
+  {% include "_navbar.html" with active_link="home" %}
 {% endblock %}
 
 {% block container %}
-{% include "_sidenav.html" with active_link=data.0.new|lower %}
-<div class="main">
-<div class="container profile-head">
-    <div class="row">
-      <div class="col-sm-12 text-center">
-        <h1>POINTS TRANSFORMED</h1>
+<div class="app-main with-sidebar flex flex-col">
+  {% include "_sidenav.html" with active_link="points" %}
+  <div class="flex-1 p-4 md:p-8" x-data="{ view: '{{ map_data|yesno:"map,table" }}' }">
+    <h1 class="text-2xl font-bold mb-6">Transformation results</h1>
+
+    <div class="card mb-6">
+      <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div><dt class="text-slate-500">Transformation to</dt><dd class="font-semibold">{{ data.0.1 }}</dd></div>
+        <div><dt class="text-slate-500">Sheet number</dt><dd class="font-semibold">{{ data.0.0 }}</dd></div>
+        <div><dt class="text-slate-500">Points input</dt><dd class="font-semibold">{{ data.0.2 }}</dd></div>
+        <div><dt class="text-slate-500">Valid points</dt><dd class="font-semibold">{{ data.0.3 }}</dd></div>
+      </dl>
+    </div>
+
+    {% if map_data %}
+    <div class="view-tabs">
+      <button type="button" class="view-tab" :class="{ 'active': view === 'map' }"
+              @click="view = 'map'; $nextTick(() => window.fayvadGeoMapApi && window.fayvadGeoMapApi.invalidate())">Map view</button>
+      <button type="button" class="view-tab" :class="{ 'active': view === 'table' }" @click="view = 'table'">Table view</button>
+    </div>
+
+    <div x-show="view === 'map'" x-cloak class="map-shell mb-8">
+      {% if not map_data.georef_ok %}
+      <div class="alert alert-warning mb-4">
+        Map preview could not reproject all coordinates. Verify easting/northing values and CRS settings in <code>fayvadgeo/settings/base.py</code>.
+      </div>
+      {% endif %}
+
+      <div id="transform-map"></div>
+
+      <div class="map-toolbar">
+        <div class="map-tool-row">
+          <button type="button" class="map-icon-btn" id="map-zoom-in" title="Zoom in">+</button>
+          <button type="button" class="map-icon-btn" id="map-zoom-out" title="Zoom out">−</button>
+          <button type="button" class="map-icon-btn" id="map-fit" title="Fit to data">&#8982;</button>
+          <button type="button" class="map-icon-btn" id="map-reset" title="Reset view">&#8962;</button>
+        </div>
+        <div class="map-toolbar-panel">
+          <h3>Basemap</h3>
+          <div class="map-basemap-options">
+            <label><input type="radio" name="basemap" value="osm" checked> OpenStreetMap</label>
+            <label><input type="radio" name="basemap" value="esriStreet"> Esri Street</label>
+            <label><input type="radio" name="basemap" value="esriImagery"> Esri Imagery</label>
+            {% if GOOGLE_MAPS_API_KEY %}
+            <label><input type="radio" name="basemap" value="google"> Google Maps</label>
+            {% else %}
+            <p class="text-xs text-slate-500 mt-2">Add <code>GOOGLE_MAPS_API_KEY</code> to local.env for Google basemap.</p>
+            {% endif %}
+          </div>
+        </div>
+        <div class="map-toolbar-panel">
+          <h3>Layers</h3>
+          <div class="map-basemap-options">
+            <label><input type="checkbox" id="layer-input" checked> Input points</label>
+            <label><input type="checkbox" id="layer-output" checked> Transformed</label>
+            <label><input type="checkbox" id="layer-control" checked> Sheet controls</label>
+            <label><input type="checkbox" id="layer-links" checked> Shift vectors</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="map-legend">
+        <div class="map-legend-item"><span class="map-swatch input"></span> Input</div>
+        <div class="map-legend-item"><span class="map-swatch output"></span> Transformed</div>
+        <div class="map-legend-item"><span class="map-swatch control"></span> Sheet control</div>
+        <div class="map-legend-item"><span class="map-swatch link"></span> Shift vector</div>
       </div>
     </div>
-</div>
-<div class="container profile-body">
-    <div class="row">
-      <div class="col-sm-12">
-    <table class="table">
-     <tr>
-      <th colspan=4 class="bg-primary text-center">Transformation request</th>
-      </tr>
-      <tr>
-        <td>Transformation to: <strong>{{data.0.1}}</strong></td>
-        <td>Sheet Number: <strong>{{data.0.0}}</strong></td>
-        <td>Points input: <strong>{{data.0.2}}</strong></td>
-        <td>Valid points: <strong>{{data.0.3}}</strong></td>
-      </tr>
-    </table>
-      <table class="table">
-        <tr>
-          <th colspan=2 class="bg-primary text-center">Input Point</th>
-          <th colspan=2 class="bg-primary text-center">Transformed Point</th>
-        </tr>
-        {% if data.1|length != data.0.2 %}
-        <tr><td colspan=4 class="text-center"><strong><h4>{{data.1}}</h4></strong></td></tr>
-        {% else %}
-          {% for dt in data.1 %}
-          <tr>
-          <td>{{dt.0.0|floatformat:2}}</td>
-          <td>{{dt.0.1|floatformat:2}}</td>
-          {% if dt.1 == 'Point outside sheet - Not transformed' %}
-            <td colspan=2 ><strong>{{dt.1}}</strong></td>
-          {% else %}
-            <td>{{dt.1.0|floatformat:2}}</td><td>{{dt.1.1|floatformat:2}}</td>
-          {% endif %}
-          </tr>
-          {% endfor %}
-        {% endif %}
-      </table>
+    {% endif %}
+
+    <div {% if map_data %}x-show="view === 'table'" x-cloak{% endif %}>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th colspan="2" class="text-center">Input point</th>
+              <th colspan="2" class="text-center">Transformed point</th>
+            </tr>
+            <tr>
+              <th>Easting</th><th>Northing</th><th>Easting</th><th>Northing</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if data.1|length != data.0.2 %}
+              <tr><td colspan="4" class="text-center font-semibold text-amber-800 bg-amber-50">{{ data.1 }}</td></tr>
+            {% else %}
+              {% for dt in data.1 %}
+                <tr>
+                  <td>{{ dt.0.0|floatformat:2 }}</td>
+                  <td>{{ dt.0.1|floatformat:2 }}</td>
+                  {% if dt.1 == 'Point outside sheet - Not transformed' %}
+                    <td colspan="2" class="text-red-700 font-medium">{{ dt.1 }}</td>
+                  {% else %}
+                    <td>{{ dt.1.0|floatformat:2 }}</td>
+                    <td>{{ dt.1.1|floatformat:2 }}</td>
+                  {% endif %}
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
     </div>
-    </div>
+  </div>
+  {% include "_footer.html" %}
 </div>
 
-{%block footer %}
-  {% include "_footer.html" %}
+{% if map_data %}
+{{ map_data|json_script:"transform-map-data" }}
+{% endif %}
 {% endblock %}
-</div>
+
+{% block scripts %}
+{% if map_data %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+{% if GOOGLE_MAPS_API_KEY %}
+<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@0.15.0/dist/Leaflet.GoogleMutant.js"></script>
+{% endif %}
+<script>
+  document.getElementById('transform-map-data').setAttribute(
+    'data-google-key', '{{ GOOGLE_MAPS_API_KEY|escapejs }}'
+  );
+</script>
+<script src="{% static 'site/js/map.js' %}"></script>
+{% endif %}
 {% endblock %}

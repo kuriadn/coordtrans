@@ -1,67 +1,58 @@
 {% extends "base.html" %}
 
-{% load staticfiles %}
-{% load crispy_forms_tags %}
-
-{% block title %}{{ block.super }}Home{% endblock %}
+{% block title %}{{ SITE_NAME }} — Survey tools{% endblock %}
+{% block description %}{{ SITE_TAGLINE }}. Coordinate transforms and more at {{ SITE_DOMAIN }}.{% endblock %}
 
 {% block navbar-left %}
   {% include "_navbar.html" with active_link="home" %}
 {% endblock %}
 
-{% block navbar-right %}
-  {% if not user.is_authenticated %}
-<a class="btn btn-default" href="{% url 'accounts:login' %}" role="button">Log in</a>
-<a class="btn btn-primary" href="{% url 'accounts:signup' %}" role="button">Sign up</a>
-  {% else %}
-    {{ block.super }}
-  {% endif %}
+{% block splash %}
+<section class="hero pt-20">
+  <div class="container">
+    <p class="text-sm font-medium text-primary-600 mb-2">{{ SITE_DOMAIN }}</p>
+    <h1>{{ SITE_NAME }}</h1>
+    <p>{{ SITE_TAGLINE }}</p>
+    <a class="btn btn-primary btn-lg" href="#tools">Browse tools</a>
+  </div>
+</section>
 {% endblock %}
 
-{% block splash %}
-  <div class="jumbotron jumbotron-carousel corporate-jumbo">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-8 col-sm-8">
-          <h1>{% include "_brandname.html" %}</h1>
-          <p>Cras justo odio, dapibus ac facilisis in, egestas eget quam.</p>
-	  <a class="btn btn-primary" href="{% url 'accounts:signup' %}" role="button">Sign up for Free!</a>
-        </div>
-        <div class="col-md-4 col-sm-4">
-
-        </div>
-      </div>
-    </div>
-  </div>
-{% endblock splash %}
-
 {% block container %}
-<!-- Benefits of the Django application -->
-<a name="about"></a>
+<section class="py-16" id="tools">
+  <div class="container">
+    <div class="mb-10 text-center max-w-2xl mx-auto">
+      <h2 class="text-3xl font-bold text-slate-900 mb-3">Survey tools</h2>
+      <p class="text-slate-600">Free calculators and converters — no account required.</p>
+    </div>
 
-<div class="container">
-  <div class="row">
-    <div class="col-lg-4">
-      <h2>Heading</h2>
-      <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-      <p><a class="btn btn-primary" href="#" role="button">View details &raquo;</a></p>
-    </div>
-    <div class="col-lg-4">
-      <h2>Heading</h2>
-      <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-      <p><a class="btn btn-primary" href="#" role="button">View details &raquo;</a></p>
-    </div>
-    <div class="col-lg-4">
-      <h2>Heading</h2>
-      <p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa.</p>
-      <p><a class="btn btn-primary" href="#" role="button">View details &raquo;</a></p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% for tool in SURVEY_TOOLS %}
+        <article class="card flex flex-col h-full">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <h3 class="text-xl font-semibold text-slate-900">{{ tool.name }}</h3>
+            {% if tool.status == 'live' %}
+              <span class="badge badge-success shrink-0">Live</span>
+            {% else %}
+              <span class="badge badge-muted shrink-0">Coming soon</span>
+            {% endif %}
+          </div>
+          <p class="text-slate-600 mb-4 flex-1">{{ tool.description }}</p>
+          {% if tool.status == 'live' %}
+            <div class="flex flex-wrap gap-2">
+              <a class="btn btn-primary" href="{{ tool.url }}">Open tool</a>
+              {% for link in tool.links %}
+                <a class="btn btn-secondary btn-sm" href="{{ link.url }}">{{ link.label }}</a>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </article>
+      {% endfor %}
     </div>
   </div>
-</div>
+</section>
+{% endblock %}
 
-{% endblock container %}
-
-{% block scripts %}
-<script src="{% static 'site/js/site.js' %}"></script>
-{% endblock scripts %}
-
+{% block footer %}
+  {% include "_footer.html" %}
+{% endblock %}

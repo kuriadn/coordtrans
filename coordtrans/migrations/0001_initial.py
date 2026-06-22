@@ -30,10 +30,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('shtno', models.CharField(max_length=8, verbose_name='Sheet No.', primary_key=True, serialize=False)),
                 ('scan', models.ImageField(upload_to='sheets/', verbose_name='Sheet Image')),
-                ('pt1', models.ForeignKey(to='coordtrans.ControlPoint', related_name='control_pt1', verbose_name='Point 1')),
-                ('pt2', models.ForeignKey(to='coordtrans.ControlPoint', related_name='control_pt2', verbose_name='Point 2')),
-                ('pt3', models.ForeignKey(to='coordtrans.ControlPoint', related_name='control_pt3', verbose_name='Point 3')),
-                ('pt4', models.ForeignKey(to='coordtrans.ControlPoint', related_name='control_pt4', verbose_name='Point 4')),
+                ('pt1', models.ForeignKey(on_delete=models.CASCADE, to='coordtrans.ControlPoint', related_name='control_pt1', verbose_name='Point 1')),
+                ('pt2', models.ForeignKey(on_delete=models.CASCADE, to='coordtrans.ControlPoint', related_name='control_pt2', verbose_name='Point 2')),
+                ('pt3', models.ForeignKey(on_delete=models.CASCADE, to='coordtrans.ControlPoint', related_name='control_pt3', verbose_name='Point 3')),
+                ('pt4', models.ForeignKey(on_delete=models.CASCADE, to='coordtrans.ControlPoint', related_name='control_pt4', verbose_name='Point 4')),
             ],
             options={
                 'ordering': ['shtno'],
@@ -47,8 +47,8 @@ class Migration(migrations.Migration):
                 ('points', models.IntegerField(verbose_name='Points Transformed')),
                 ('trtype', models.CharField(choices=[('cassini', 'Cassini'), ('utm', 'U.T.M.')], max_length=8, verbose_name='Transformation Type')),
                 ('datedone', models.DateField(verbose_name='Date Done', default=django.utils.timezone.now)),
-                ('sheet', models.ForeignKey(to='coordtrans.SheetReference')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('sheet', models.ForeignKey(on_delete=models.CASCADE, to='coordtrans.SheetReference')),
+                ('user', models.ForeignKey(on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'Transformation Request',

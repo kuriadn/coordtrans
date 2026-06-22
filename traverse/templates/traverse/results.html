@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Traverse results — {% include "_brandname.html" %}{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link href="{% static 'site/css/map.css' %}" rel="stylesheet">
+{% if GOOGLE_MAPS_API_KEY %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script>
+{% endif %}
+{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link="tools" %}
+{% endblock %}
+
+{% block container %}
+<div class="app-main with-sidebar flex flex-col">
+  {% include "traverse/_sidenav.html" with active_link="adjust" %}
+  <div class="flex-1 p-4 md:p-8" x-data="{ view: 'map' }">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <h1 class="text-2xl font-bold">Traverse results</h1>
+      <a class="btn btn-secondary" href="{% url 'traverse:adjust' %}">New traverse</a>
+    </div>
+
+    <div class="card mb-6">
+      <dl class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div>
+          <dt class="text-slate-500">Traverse type</dt>
+          <dd class="font-semibold">{{ result.traverse_type|title }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Adjustment</dt>
+          <dd class="font-semibold">
+            {% if result.method == 'compass' %}Compass rule (Bowditch)
+            {% elif result.method == 'transit' %}Transit rule
+            {% else %}None (open traverse){% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Total distance</dt>
+          <dd class="font-semibold">{{ result.total_distance|floatformat:3 }} m</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Start station</dt>
+          <dd class="font-semibold">{{ setup.start_station }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Start coordinates</dt>
+          <dd class="font-semibold">E {{ result.start_easting|floatformat:3 }}, N {{ result.start_northing|floatformat:3 }}</dd>
+        </div>
+        {% if result.traverse_type == 'closed' %}
+        <div>
+          <dt class="text-slate-500">Linear misclosure</dt>
+          <dd class="font-semibold">{{ result.misclosure_linear|floatformat:4 }} m</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Misclosure latitude</dt>
+          <dd class="font-semibold">{{ result.misclosure_latitude|floatformat:4 }} m</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Misclosure departure</dt>
+          <dd class="font-semibold">{{ result.misclosure_departure|floatformat:4 }} m</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Relative precision</dt>
+          <dd class="font-semibold">{{ result.precision_label }}</dd>
+        </div>
+        {% endif %}
+      </dl>
+    </div>
+
+    <div class="view-tabs">
+      <button type="button" class="view-tab" :class="{ 'active': view === 'map' }"
+              @click="view = 'map'; $nextTick(() => window.fayvadTraverseMapApi && window.fayvadTraverseMapApi.invalidate())">Map view</button>
+      <button type="button" class="view-tab" :class="{ 'active': view === 'table' }" @click="view = 'table'">Table view</button>
+    </div>
+
+    <div x-show="view === 'map'" x-cloak class="map-shell mb-8">
+      {% if map_data.mode == 'plan' %}
+      <div class="alert alert-info mb-4">
+        Plan view — coordinates are shown on a local grid (E/N). Use UTM eastings/northings for a georeferenced basemap.
+      </div>
+      {% endif %}
+
+      <div id="traverse-map"></div>
+
+      <div class="map-toolbar">
+        <div class="map-tool-row">
+          <button type="button" class="map-icon-btn" id="traverse-map-zoom-in" title="Zoom in">+</button>
+          <button type="button" class="map-icon-btn" id="traverse-map-zoom-out" title="Zoom out">−</button>
+          <button type="button" class="map-icon-btn" id="traverse-map-fit" title="Fit to traverse">&#8982;</button>
+          <button type="button" class="map-icon-btn" id="traverse-map-reset" title="Reset view">&#8962;</button>
+        </div>
+        {% if map_data.mode == 'geographic' %}
+        <div class="map-toolbar-panel">
+          <h3>Basemap</h3>
+          <div class="map-basemap-options">
+            <label><input type="radio" name="traverse-basemap" value="osm" checked> OpenStreetMap</label>
+            <label><input type="radio" name="traverse-basemap" value="esriStreet"> Esri Street</label>
+            <label><input type="radio" name="traverse-basemap" value="esriImagery"> Esri Imagery</label>
+            {% if GOOGLE_MAPS_API_KEY %}
+            <label><input type="radio" name="traverse-basemap" value="google"> Google Maps</label>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        <div class="map-toolbar-panel">
+          <h3>Layers</h3>
+          <div class="map-basemap-options">
+            <label><input type="checkbox" id="traverse-layer-traverse" checked> Traverse lines</label>
+            <label><input type="checkbox" id="traverse-layer-stations" checked> Stations</label>
+            <label><input type="checkbox" id="traverse-layer-labels" checked> Bearings &amp; distances</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="map-legend">
+        <div class="map-legend-item"><span class="map-swatch traverse-line"></span> Traverse leg</div>
+        <div class="map-legend-item"><span class="map-swatch traverse-start"></span> Start station</div>
+        <div class="map-legend-item"><span class="map-swatch traverse-station"></span> Station</div>
+      </div>
+    </div>
+
+    <div x-show="view === 'table'" x-cloak>
+      <h2 class="text-lg font-semibold mb-3">Station coordinates</h2>
+      <div class="table-wrap mb-8">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Station</th>
+              <th class="text-right">Easting</th>
+              <th class="text-right">Northing</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for st in result.stations %}
+            <tr>
+              <td>{{ st.name }}</td>
+              <td class="text-right font-mono text-sm">{{ st.easting|floatformat:3 }}</td>
+              <td class="text-right font-mono text-sm">{{ st.northing|floatformat:3 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="text-lg font-semibold mb-3">Leg details</h2>
+      <div class="table-wrap">
+        <table class="data-table text-sm">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>From</th>
+              <th>To</th>
+              <th class="text-right">Bearing</th>
+              <th class="text-right">Distance</th>
+              <th class="text-right">Latitude</th>
+              <th class="text-right">Departure</th>
+              {% if result.traverse_type == 'closed' %}
+              <th class="text-right">Corr. lat</th>
+              <th class="text-right">Corr. dep</th>
+              <th class="text-right">Adj. lat</th>
+              <th class="text-right">Adj. dep</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for leg in result.legs %}
+            <tr>
+              <td>{{ leg.index }}</td>
+              <td>{{ leg.from_station }}</td>
+              <td>{{ leg.to_station }}</td>
+              <td class="text-right font-mono">{{ leg.bearing_deg|floatformat:4 }}°</td>
+              <td class="text-right font-mono">{{ leg.distance|floatformat:3 }}</td>
+              <td class="text-right font-mono">{{ leg.latitude|floatformat:4 }}</td>
+              <td class="text-right font-mono">{{ leg.departure|floatformat:4 }}</td>
+              {% if result.traverse_type == 'closed' %}
+              <td class="text-right font-mono">{{ leg.corr_latitude|floatformat:4 }}</td>
+              <td class="text-right font-mono">{{ leg.corr_departure|floatformat:4 }}</td>
+              <td class="text-right font-mono">{{ leg.adj_latitude|floatformat:4 }}</td>
+              <td class="text-right font-mono">{{ leg.adj_departure|floatformat:4 }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ map_data|json_script:"traverse-map-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+{% if GOOGLE_MAPS_API_KEY %}
+<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@0.15.0/dist/Leaflet.GoogleMutant.js"></script>
+{% endif %}
+<script>
+  document.getElementById('traverse-map-data').setAttribute(
+    'data-google-key', '{{ GOOGLE_MAPS_API_KEY|escapejs }}'
+  );
+</script>
+<script src="{% static 'site/js/traverse-map.js' %}"></script>
+{% endblock %}

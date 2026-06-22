@@ -1,18 +1,15 @@
 {% extends "base.html" %}
 
-{% load crispy_forms_tags %}
-
-{% block navbar %}
-{% endblock %}
+{% block navbar %}{% endblock %}
 
 {% block container %}
-<div class="container form-box">
-  <div class="text-center">
-    <h2>{% block form_heading %}{% endblock %}</h2>
+<div class="auth-shell">
+  <div class="card w-full max-w-md shadow-lg">
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-slate-900">{% block form_heading %}{% endblock %}</h1>
+      <p class="text-sm text-slate-500 mt-2">{% include "_brandname.html" %} · Fayvad Geosolutions</p>
+    </div>
+    {% block form %}{% endblock %}
   </div>
-  {% block form %}
-  {% endblock %}
 </div>
-
-{% endblock container %}
-
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load widget_tweaks static %}
+
+{% block title %}Area &amp; perimeter — {% include "_brandname.html" %}{% endblock %}
+
+{% block navbar-left %}
+  {% include "_navbar.html" with active_link="tools" %}
+{% endblock %}
+
+{% block container %}
+<div class="app-main with-sidebar flex flex-col">
+  {% include "areacalc/_sidenav.html" with active_link="compute" %}
+  <div class="flex-1 p-4 md:p-8 max-w-5xl">
+    <h1 class="text-2xl font-bold mb-2">Area &amp; perimeter</h1>
+    <p class="text-slate-600 mb-6">
+      Enter boundary vertices in order (clockwise or anticlockwise).
+      Area uses the coordinate (shoelace) method; distances are planimetric.
+    </p>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <div class="card">
+        <h2 class="text-lg font-semibold mb-4">Parcel setup</h2>
+        {% if setup_form.non_field_errors %}
+          <div class="alert alert-warning mb-4">{{ setup_form.non_field_errors }}</div>
+        {% endif %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for field in setup_form %}
+            <div class="{% if field.name == 'closed' %}md:col-span-2{% endif %}">
+              {% if field.field.widget.input_type == 'checkbox' %}
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                  {% render_field field class="rounded border-slate-300" %}
+                  <span>{{ field.label }}</span>
+                </label>
+              {% else %}
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% render_field field class="form-input" %}
+              {% endif %}
+              {% if field.help_text %}
+                <p class="text-xs text-slate-500 mt-1">{{ field.help_text }}</p>
+              {% endif %}
+              {% if field.errors %}<p class="text-sm text-red-600 mt-1">{{ field.errors|join:', ' }}</p>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {{ point_formset.management_form }}
+      <div class="card">
+        <h2 class="text-lg font-semibold mb-4">Boundary points</h2>
+        {% if point_formset.non_form_errors %}
+          <div class="alert alert-warning mb-4">{{ point_formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="hidden md:grid grid-cols-12 gap-2 text-xs font-semibold uppercase text-slate-500 mb-2 px-1">
+          <span class="col-span-3">Point</span>
+          <span class="col-span-4">Easting</span>
+          <span class="col-span-5">Northing</span>
+        </div>
+
+        <div id="area_form_set" class="space-y-3">
+          {% for form in point_formset %}
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 bg-slate-50 rounded-lg">
+              <div class="md:col-span-3">
+                {% render_field form.label class="form-input" placeholder="P1" %}
+              </div>
+              <div class="md:col-span-4">
+                {% render_field form.easting class="form-input" %}
+              </div>
+              <div class="md:col-span-5">
+                {% render_field form.northing class="form-input" %}
+              </div>
+              {% if form.errors %}
+                <div class="md:col-span-12 text-sm text-red-600">{{ form.errors }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <template id="area_empty_form">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 bg-slate-50 rounded-lg">
+            {% for field in point_formset.empty_form %}
+              <div class="{% if field.name == 'label' %}md:col-span-3{% elif field.name == 'easting' %}md:col-span-4{% else %}md:col-span-5{% endif %}">
+                {% render_field field class="form-input" %}
+              </div>
+            {% endfor %}
+          </div>
+        </template>
+
+        <button type="button" class="btn btn-secondary btn-sm mt-4" id="area_add_point">Add point</button>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit" class="btn btn-primary">Compute</button>
+        <a class="btn btn-secondary" href="{% url 'home' %}#tools">All tools</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'site/js/area-formset.js' %}"></script>
+{% endblock %}

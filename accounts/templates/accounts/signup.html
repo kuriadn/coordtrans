@@ -1,18 +1,20 @@
 {% extends "accounts/auth_base.html" %}
 
-{% load crispy_forms_tags %}
-
-{% block title %}{{ block.super }}Sign Up{% endblock %}
-
-{% block form_heading %}Signing Up is Free{% endblock %}
+{% block title %}Sign up — {% include "_brandname.html" %}{% endblock %}
+{% block form_heading %}Create account{% endblock %}
 
 {% block form %}
-  {% crispy form %}
-
-  <div class="form-message">
-    <p>
-      Already signed up? <a href="{% url 'accounts:login' %}">Log in</a>.
-    </p>
-  </div>
-{% endblock form %}
-
+<form method="post" class="space-y-4">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+  {% endif %}
+  {% for field in form %}
+    {% include "includes/form_field.html" with field=field %}
+  {% endfor %}
+  <button type="submit" class="btn btn-primary btn-block btn-lg">Sign up</button>
+</form>
+<p class="text-center text-sm text-slate-600 mt-6">
+  Already registered? <a href="{% url 'accounts:login' %}">Log in</a>
+</p>
+{% endblock %}

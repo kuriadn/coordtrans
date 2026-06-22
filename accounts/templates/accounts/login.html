@@ -1,18 +1,22 @@
 {% extends "accounts/auth_base.html" %}
 
-{% load crispy_forms_tags %}
-
-{% block title %}{{ block.super }}Log In{% endblock %}
-
-{% block form_heading %}Please Log In{% endblock %}
+{% block title %}Log in — {% include "_brandname.html" %}{% endblock %}
+{% block form_heading %}Log in{% endblock %}
 
 {% block form %}
-  {% crispy form %}
-
-  <div class="form-message">
-    <p>
-      Don't have an account? <a href="{% url 'accounts:signup' %}">Sign up</a>.
-    </p>
+<form method="post" class="space-y-4">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+  {% endif %}
+  {% include "includes/form_field.html" with field=form.username %}
+  {% include "includes/form_field.html" with field=form.password %}
+  <div class="flex items-center gap-2">
+    {{ form.remember_me }}
+    <label for="{{ form.remember_me.id_for_label }}" class="text-sm text-slate-600">{{ form.remember_me.label }}</label>
   </div>
-{% endblock form %}
-
+  <p class="text-sm"><a href="{% url 'accounts:password-reset' %}">Forgot password?</a></p>
+  <button type="submit" class="btn btn-primary btn-block btn-lg">Log in</button>
+</form>
+<p class="text-center text-sm text-slate-500 mt-6">Staff access only.</p>
+{% endblock %}

@@ -1,16 +1,14 @@
 <form method="post" enctype="multipart/form-data" action="{{ formdata.0.url }}" class="js-create-form">
   {% csrf_token %}
   <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-      <span aria-hidden="true">&times;</span>
-    </button>
-    <h4 class="modal-title">Create a new {{ formdata.0.objname}}</h4>
+    <h2 class="text-lg font-semibold">Create {{ formdata.0.objname }}</h2>
+    <button type="button" class="alert-close" data-modal-close aria-label="Close">&times;</button>
   </div>
   <div class="modal-body">
     {% include 'includes/partial_form.html' %}
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-    <button type="submit" class="btn btn-primary">Create {{ formdata.0.objname }}</button>
+    <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+    <button type="submit" class="btn btn-primary">Create</button>
   </div>
 </form>
